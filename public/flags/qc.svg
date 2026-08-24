@@ -1,0 +1,45 @@
+<svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue background -->
+  <rect width="300" height="200" fill="#0055A4"/>
+
+  <!-- White cross -->
+  <rect x="125" y="0" width="50" height="200" fill="white"/>
+  <rect x="0" y="75" width="300" height="50" fill="white"/>
+
+  <!-- Four fleurs-de-lis (simplified) -->
+  <!-- Top -->
+  <g transform="translate(150, 37) scale(0.08)">
+    <path d="M0,0 C-10,-30 -30,-40 -50,-30 C-30,-20 -20,0 -10,20 C0,40 0,60 0,80 C0,60 0,40 10,20 C20,0 30,-20 50,-30 C30,-40 10,-30 0,0 Z" fill="white"/>
+    <circle cx="-30" cy="-10" r="8" fill="white"/>
+    <circle cx="30" cy="-10" r="8" fill="white"/>
+    <circle cx="-25" cy="15" r="6" fill="white"/>
+    <circle cx="25" cy="15" r="6" fill="white"/>
+  </g>
+
+  <!-- Bottom -->
+  <g transform="translate(150, 163) scale(0.08) rotate(180)">
+    <path d="M0,0 C-10,-30 -30,-40 -50,-30 C-30,-20 -20,0 -10,20 C0,40 0,60 0,80 C0,60 0,40 10,20 C20,0 30,-20 50,-30 C30,-40 10,-30 0,0 Z" fill="white"/>
+    <circle cx="-30" cy="-10" r="8" fill="white"/>
+    <circle cx="30" cy="-10" r="8" fill="white"/>
+    <circle cx="-25" cy="15" r="6" fill="white"/>
+    <circle cx="25" cy="15" r="6" fill="white"/>
+  </g>
+
+  <!-- Left -->
+  <g transform="translate(37, 100) scale(0.08) rotate(-90)">
+    <path d="M0,0 C-10,-30 -30,-40 -50,-30 C-30,-20 -20,0 -10,20 C0,40 0,60 0,80 C0,60 0,40 10,20 C20,0 30,-20 50,-30 C30,-40 10,-30 0,0 Z" fill="white"/>
+    <circle cx="-30" cy="-10" r="8" fill="white"/>
+    <circle cx="30" cy="-10" r="8" fill="white"/>
+    <circle cx="-25" cy="15" r="6" fill="white"/>
+    <circle cx="25" cy="15" r="6" fill="white"/>
+  </g>
+
+  <!-- Right -->
+  <g transform="translate(263, 100) scale(0.08) rotate(90)">
+    <path d="M0,0 C-10,-30 -30,-40 -50,-30 C-30,-20 -20,0 -10,20 C0,40 0,60 0,80 C0,60 0,40 10,20 C20,0 30,-20 50,-30 C30,-40 10,-30 0,0 Z" fill="white"/>
+    <circle cx="-30" cy="-10" r="8" fill="white"/>
+    <circle cx="30" cy="-10" r="8" fill="white"/>
+    <circle cx="-25" cy="15" r="6" fill="white"/>
+    <circle cx="25" cy="15" r="6" fill="white"/>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg width="400" height="120" viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Cabinet d'Expertise DETIE -->
+  <!-- Couleurs officielles du logo -->
+  <defs>
+    <!-- Gradient Bleu -->
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1a3a5c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3a7ca5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5ba4c9;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Gradient Doré -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#b8941f;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#c9a227;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d4b035;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Graphique à barres (gauche) -->
+  <g transform="translate(10, 20)">
+    <!-- Barre 1 - Bleu marine -->
+    <rect x="0" y="40" width="12" height="40" rx="2" fill="#1a3a5c" />
+    <!-- Barre 2 - Bleu moyen -->
+    <rect x="16" y="25" width="12" height="55" rx="2" fill="url(#blueGradient)" />
+    <!-- Barre 3 - Bleu clair -->
+    <rect x="32" y="10" width="12" height="70" rx="2" fill="#5ba4c9" />
+    <!-- Barre 4 - Doré (la plus haute) -->
+    <rect x="48" y="0" width="12" height="80" rx="2" fill="url(#goldGradient)" />
+  </g>
+
+  <!-- Texte Principal -->
+  <text x="80" y="45" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#4a4a4a">
+    LE CABINET D'EXPERTISE
+  </text>
+
+  <!-- DETIE en doré (plus grand) -->
+  <text x="80" y="85" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#goldGradient)">
+    DETIE
+  </text>
+
+  <!-- Ligne décorative dorée sous DETIE -->
+  <line x1="80" y1="95" x2="200" y2="95" stroke="url(#goldGradient)" stroke-width="2" />
+</svg>

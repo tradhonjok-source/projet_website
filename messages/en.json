@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "title": "Cabinet d'Expertise DETIE - Recruitment & Certified Admin",
+    "description": "International Recruitment & CNESST Certified Administrator for Canada. License AdmA A24-52400."
+  },
+  "navigation": {
+    "home": "Home",
+    "recruitment": "Recruitment",
+    "admin": "Certified Admin",
+    "about": "About",
+    "contact": "Contact",
+    "languageSwitch": "FR"
+  },
+  "hero": {
+    "title": "Cabinet d'Expertise DETIE",
+    "subtitle": "International Recruitment & Certified Administrator for Canada",
+    "permisCnesst": "CNESST License: AdmA A24-52400",
+    "btnRecruitment": "International Recruitment",
+    "btnAdmin": "Certified Administrator",
+    "scroll": "Discover"
+  },
+  "recruitment": {
+    "hero": {
+      "badge": "International Recruitment",
+      "title": "Find the Best Global Talents",
+      "subtitle": "From selection to integration, we guide you through every step of international recruitment."
+    },
+    "recruiter": {
+      "title": "I'm a Recruiter",
+      "subtitle": "Companies & Employers",
+      "desc": "Access a global pool of qualified talents. We manage the entire recruitment process for you.",
+      "services": {
+        "sourcing": {
+          "title": "International Recruitment",
+          "desc": "Access a global pool of qualified talents."
+        },
+        "permits": {
+          "title": "Work Permit Management",
+          "desc": "LMIA feasibility study and CNESST preparation."
+        },
+        "integration": {
+          "title": "Integration",
+          "desc": "Arrival orientation and post-arrival follow-up 30/60/90 days."
+        }
+      },
+      "cta": "Request a Candidate"
+    },
+    "candidate": {
+      "title": "I'm a Candidate",
+      "subtitle": "International Workers",
+      "desc": "Get a temporary work permit in Canada. We guide you through all administrative procedures.",
+      "services": {
+        "offers": {
+          "title": "Verified Job Offers",
+          "desc": "Pre-screened opportunities with legitimate employers."
+        },
+        "permit": {
+          "title": "CNESST Work Permit",
+          "desc": "Get your work permit with our complete support."
+        },
+        "support": {
+          "title": "Legal Support",
+          "desc": "Legal expertise for all your immigration procedures."
+        }
+      },
+      "cta": "Apply Now"
+    },
+    "trust": {
+      "title": "Why Choose Us?",
+      "countries": "Countries",
+      "placements": "Successful Placements",
+      "experience": "Years Experience",
+      "satisfaction": "Client Satisfaction"
+    },
+    "cta": {
+      "title": "Ready to Find Your Talent?",
+      "subtitle": "Contact us today to discuss your international recruitment needs.",
+      "btn": "Contact Us"
+    }
+  },
+  "admin": {
+    "hero": {
+      "badge": "CNESST License: AdmA A24-52400",
+      "title": "Certified Administrative Services",
+      "subtitle": "License AdmA A24-52400. We guide you through all administrative and immigration procedures."
+    },
+    "services": {
+      "immigration": {
+        "title": "Immigration & Citizenship",
+        "desc": "Complete support for your temporary and permanent immigration procedures.",
+        "features": ["Temporary work permits", "Permanent residence", "Family sponsorship", "Canadian citizenship"]
+      },
+      "cnesst": {
+        "title": "CNESST Compliance",
+        "desc": "Certified administrator service for compliance of your foreign worker hires.",
+        "features": ["Employer eligibility verification", "Employment contract preparation", "Civil liability insurance", "Annual compliance report"]
+      },
+      "lobbying": {
+        "title": "Lobbying & Representation",
+        "desc": "Official representation with government agencies for your complex files.",
+        "features": ["Lobbyist registry registration", "Representation with Immigration Canada", "Refusal decision appeals", "Government strategic consultation"]
+      }
+    },
+    "trust": {
+      "validated": "CNESST License Validated",
+      "license": "AdmA A24-52400"
+    },
+    "cta": {
+      "title": "Need Administrative Assistance?",
+      "subtitle": "Our team of experts is ready to guide you through all your procedures.",
+      "btn": "Contact Us"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Let's Talk",
+    "desc": "Our team is ready to support you in your international recruitment projects.",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send Message",
+      "success": "Message Sent!",
+      "successDesc": "We will get back to you as soon as possible.",
+      "error": "An error occurred. Please try again."
+    }
+  },
+  "footer": {
+    "title": "CABINET D'EXPERTISE DETIE",
+    "license": "CNESST License: AR-2000074",
+    "quickLinks": "Quick Links",
+    "services": "Services",
+    "followUs": "Follow Us",
+    "copyright": "© 2026 Cabinet d'Expertise DETIE. All rights reserved.",
+    "home": "Home",
+    "about": "About",
+    "recruitment": "International Recruitment",
+    "admin": "Certified Administrator"
+  }
+}

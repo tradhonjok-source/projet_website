@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(taskkill *)",
+      "PowerShell(Get-Process *)",
+      "Bash(curl -sL http://localhost:3000/fr)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/fr/recrutement)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/en/recruitment)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/es/recruitment)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/fr/admin)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/en/admin)",
+      "Bash(pkill -9 node)",
+      "Bash(curl -s -o /dev/null -w \"FR: %{http_code}\\\\n\" http://localhost:3000/fr)",
+      "Bash(curl -s -o /dev/null -w \"EN: %{http_code}\\\\n\" http://localhost:3000/en)",
+      "Bash(curl -s -o /dev/null -w \"ES: %{http_code}\\\\n\" http://localhost:3000/es)",
+      "Bash(Test-Path C:\\\\projet_website\\\\public\\\\images\\\\ *)",
+      "PowerShell(Copy-Item *)",
+      "Bash(curl -L \"https://cdn.pixabay.com/photo/2016/11/29/05/45/astronomy-1867616_1280.jpg\" -o \"public/images/slideshow/admin.jpg\")",
+      "Bash(curl -L \"https://cdn.pixabay.com/photo/2017/02/15/12/10/business-2068543_1280.jpg\" -o \"public/images/slideshow/recrutement.jpg\")",
+      "Bash(curl -L \"https://cdn.pixabay.com/photo/2015/01/09/11/08/startup-594090_1280.jpg\" -o \"public/images/slideshow/travailleurs.jpg\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(findstr LISTENING)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
+}

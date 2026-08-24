@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model CandidateProfile {
+  id                    String   @id @default(cuid())
+  clerkUserId           String   @unique
+  email                 String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Section 1: Renseignements personnels
+  nomFamille            String?
+  prenom                String?
+  dateNaissance         DateTime?
+  numeroPasseport       String?
+  passeportDateDebut    DateTime?
+  passeportDateFin      DateTime?
+  lieuNaissanceVille    String?
+  lieuNaissanceProvince String?
+  lieuNaissancePays     String?
+  adresseNumero         String?
+  adresseRue            String?
+  adresseAppartement    String?
+  adresseVille          String?
+  adresseProvince       String?
+  adresseCodePostal     String?
+  adressePays           String?
+  telephone             String?
+  statutImmigration     String?
+  controleEntreprise    Boolean  @default(false)
+  controleEntrepriseDetails String?
+
+  // Section 2: Études (JSON array)
+  etudes                Json?
+
+  // Section 3: Expériences professionnelles (JSON array)
+  experiences           Json?
+
+  // Section 4: Déclaration
+  declarationVille      String?
+  declarationPays       String?
+  declarationNomComplet String?
+  declarationSignature  String?  // Base64 de la signature
+  declarationAcceptee   Boolean  @default(false)
+
+  // Section 5: Documents
+  documents             Json?    // { passeport: true, cvFrancais: false, ... }
+  fichiersUploades      Json?    // { cvFrancais: "url", passeport: "url", ... }
+
+  // Relations
+  user                  User     @relation(fields: [clerkUserId], references: [clerkId], onDelete: Cascade)
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  clerkId               String   @unique
+  email                 String   @unique
+  role                  String   @default("candidat") // candidat, recruteur, admin
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  candidateProfile      CandidateProfile?
+  recruiterQuestionnaire RecruiterQuestionnaire?
+  recruiterSubscription RecruiterSubscription?
+  jobPostings           JobPosting[]
+}
+
+model RecruiterQuestionnaire {
+  id                    String   @id @default(cuid())
+  clerkUserId           String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Section 1: Renseignements entreprise
+  entrepriseNom         String?
+  entrepriseAdresse     String?
+  entrepriseVille       String?
+  entrepriseProvince    String?
+  entrepriseCodePostal  String?
+  entrepriseTelephone   String?
+  entrepriseEmail       String?
+  entrepriseSiteWeb     String?
+  entrepriseNE          String?
+
+  // Section 2: Lobbying
+  lobbyingInscrit       Boolean  @default(false)
+  lobbyingNumero        String?
+  lobbyingDetails       String?
+
+  // Section 3: Recrutement
+  recrutementSecteur    String?
+  recrutementPostesOuverts Int   @default(0)
+  recrutementSalaires   String?
+  recrutementAvantages  String?
+  recrutementProcessus  String?
+
+  // Section 4: Monde/International
+  internationalPays     String?
+  internationalPartenaires String?
+  internationalExperience String?
+
+  // Section 5: Permis/Ordre
+  permisRequis          Boolean  @default(false)
+  permisTypes           String?
+  ordreProfessionnel    String?
+  ordreNumero           String?
+
+  // Section 6: Québec
+  qcRegion              String?
+  qcVillePrimaire       String?
+  qcEtablissements      String?
+
+  // Section 7: Travailleur étranger
+  travailleurNom        String?
+  travailleurPrenom     String?
+  travailleurEmail      String?
+  travailleurTelephone  String?
+  travailleurNationalite String?
+  travailleurPasseport  String?
+  travailleurFormation  String?
+  travailleurExperience String?
+  travailleurCompetences String?
+  travailleurLangues    String?
+
+  // Section 8: Déclaration
+  declarationAcceptee   Boolean  @default(false)
+  declarationNom        String?
+  declarationDate       String?
+  declarationSignature  String?  // Signature électronique (Base64/dataURL)
+
+  // Relations
+  user                  User     @relation(fields: [clerkUserId], references: [clerkId], onDelete: Cascade)
+}
+
+model RecruiterSubscription {
+  id                    String   @id @default(cuid())
+  clerkUserId           String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Type d'abonnement
+  plan                  String   // 'mensuel', 'trimestriel', 'annuel'
+  price                 Int      // Prix en cents CAD
+  maxOffres             Int      // Nombre maximum d'offres
+
+  // Dates
+  startDate             DateTime @default(now())
+  endDate               DateTime
+  isActive              Boolean  @default(true)
+
+  // Paiement
+  paymentMethod         String   // 'paypal', 'stripe'
+  paymentStatus         String   // 'pending', 'completed', 'failed', 'refunded'
+  paymentIntentId       String?  // ID de transaction PayPal ou Stripe
+
+  // Relations
+  user                  User     @relation(fields: [clerkUserId], references: [clerkId], onDelete: Cascade)
+}
+
+model JobPosting {
+  id                    String   @id @default(cuid())
+  clerkUserId           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  title                 String
+  company               String
+  location              String
+  description           String
+  requirements          String?
+  salary                String?
+  isActive              Boolean  @default(true)
+  expiresAt             DateTime?
+
+  // Relations
+  user                  User     @relation(fields: [clerkUserId], references: [clerkId], onDelete: Cascade)
+}
