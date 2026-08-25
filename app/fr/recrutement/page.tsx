@@ -30,7 +30,7 @@ export default function RecruitmentPage() {
                 De la sélection à l'intégration, nous vous accompagnons dans chaque étape du recrutement international.
               </p>
 
-              {/* Permis Recrutement - Image Display */}
+              {/* Permis Recrutement - PDF Display */}
               <div className="mb-8">
                 <a
                   href="/documents/permis-recrutement.pdf"
@@ -38,16 +38,22 @@ export default function RecruitmentPage() {
                   rel="noopener noreferrer"
                   className="inline-block group"
                 >
-                  <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 hover:border-amber-500/60 transition-all shadow-lg hover:shadow-xl hover:shadow-amber-500/20">
-                    <img
-                      src="/images/permis-ordre.png"
-                      alt="Permis de Recrutement DETIE"
-                      className="w-full max-w-md h-auto group-hover:scale-105 transition-transform duration-300"
-                    />
+                  <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 hover:border-amber-500/60 transition-all shadow-lg hover:shadow-xl hover:shadow-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-600/10 p-8">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600">
+                        <svg className="h-10 w-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-lg font-bold text-amber-400">Permis de Recrutement DETIE</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Document officiel PDF</p>
+                      </div>
+                    </div>
                   </div>
                   <div className="text-center mt-3">
                     <span className="text-sm text-amber-400 font-medium group-hover:underline">
-                      Cliquez pour visualiser le document officiel
+                      📄 Cliquez pour visualiser le permis de recrutement
                     </span>
                   </div>
                 </a>
