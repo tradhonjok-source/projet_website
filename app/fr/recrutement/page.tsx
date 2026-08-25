@@ -41,12 +41,11 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="h-[500px] w-full">
+                  <div className="w-full aspect-[3/4] max-h-[700px]">
                     <iframe
                       src="/documents/permis-recrutement.pdf#toolbar=0"
                       className="w-full h-full border-0"
                       title="Permis de Recrutement DETIE"
-                      style={{ minHeight: '500px' }}
                     />
                   </div>
                 </div>
