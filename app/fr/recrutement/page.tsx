@@ -30,7 +30,7 @@ export default function RecruitmentPage() {
                 De la sélection à l'intégration, nous vous accompagnons dans chaque étape du recrutement international.
               </p>
 
-              {/* Permis Recrutement - PDF Inline */}
+              {/* Permis Recrutement - Image Display */}
               <div className="mb-8">
                 <div className="text-center mb-4">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30">
@@ -40,33 +40,12 @@ export default function RecruitmentPage() {
                     </span>
                   </div>
                 </div>
-                <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="w-full max-w-[1100px] mx-auto p-4">
-                    {/* Rotated PDF container - 90deg counterclockwise */}
-                    <div className="relative w-full" style={{ height: '700px' }}>
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          transform: 'rotate(-90deg)',
-                          transformOrigin: 'center center',
-                          width: '100%',
-                          height: '100%'
-                        }}
-                      >
-                        <iframe
-                          src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0&zoom=page&view=FitH"
-                          className="w-full h-full border-0"
-                          title="Permis de Recrutement DETIE"
-                          style={{
-                            width: '700px',
-                            height: '1000px',
-                            transform: 'scale(1.42)',
-                            transformOrigin: 'top left'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background p-4">
+                  <img
+                    src="/images/permis-recrutement.png"
+                    alt="Permis de Recrutement DETIE"
+                    className="w-full h-auto object-contain"
+                  />
                 </div>
                 <div className="mt-4">
                   <a
@@ -77,7 +56,7 @@ export default function RecruitmentPage() {
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    Télécharger le document
+                    Télécharger le document PDF
                   </a>
                 </div>
               </div>
