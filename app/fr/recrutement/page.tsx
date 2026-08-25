@@ -56,17 +56,14 @@ export default function RecruitmentPage() {
                     />
                   </div>
                 </div>
-                <div className="mt-4">
-                  <a
-                    href="/documents/permis-recrutement.pdf"
-                    download
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Télécharger le document PDF
-                  </a>
+                <div className="mt-4 text-center">
+                  <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-amber-500/10 border-2 border-amber-500/30">
+                    <FileCheck className="h-5 w-5 text-amber-400" />
+                    <div className="text-left">
+                      <div className="text-xs text-amber-400/80 uppercase">Numéro du permis</div>
+                      <div className="text-lg font-bold text-amber-400">AR-2604957</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
