@@ -41,11 +41,20 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background p-4">
-                  <img
-                    src="/images/permis-recrutement.png"
-                    alt="Permis de Recrutement DETIE"
-                    className="w-full h-auto object-contain"
-                  />
+                  <div className="relative w-full flex justify-center" style={{ height: '650px' }}>
+                    <img
+                      src="/images/permis-recrutement.png"
+                      alt="Permis de Recrutement DETIE"
+                      className="absolute"
+                      style={{
+                        height: '100%',
+                        width: 'auto',
+                        transform: 'rotate(-90deg)',
+                        transformOrigin: 'center center',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
                 </div>
                 <div className="mt-4">
                   <a
