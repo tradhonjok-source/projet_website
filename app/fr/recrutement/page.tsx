@@ -41,9 +41,9 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="w-full max-w-[1000px] mx-auto p-4">
+                  <div className="w-full max-w-[1100px] mx-auto p-4">
                     {/* Rotated PDF container - 90deg counterclockwise */}
-                    <div className="relative w-full" style={{ height: '650px' }}>
+                    <div className="relative w-full" style={{ height: '700px' }}>
                       <div
                         className="absolute inset-0"
                         style={{
@@ -58,9 +58,9 @@ export default function RecruitmentPage() {
                           className="w-full h-full border-0"
                           title="Permis de Recrutement DETIE"
                           style={{
-                            width: '650px',
-                            height: '900px',
-                            transform: 'scale(1.3)',
+                            width: '700px',
+                            height: '1000px',
+                            transform: 'scale(1.42)',
                             transformOrigin: 'top left'
                           }}
                         />
