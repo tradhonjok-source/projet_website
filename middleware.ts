@@ -24,6 +24,9 @@ export default clerkMiddleware(async (auth, req) => {
     '/en/admin',
     '/es/admin',
     '/fr/admin/gestion-actifs',
+    '/documents',
+    '/images',
+    '/flags',
     '/api/webhooks/clerk',
   ];
 
