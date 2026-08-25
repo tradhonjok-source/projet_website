@@ -41,9 +41,9 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="w-full aspect-[3/4] max-h-[700px]">
+                  <div className="w-full aspect-[4/3] max-w-[800px] mx-auto">
                     <iframe
-                      src="/documents/permis-recrutement.pdf#toolbar=0"
+                      src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0"
                       className="w-full h-full border-0"
                       title="Permis de Recrutement DETIE"
                     />
