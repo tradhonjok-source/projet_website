@@ -41,12 +41,15 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="w-full aspect-[4/3] max-w-[800px] mx-auto">
-                    <iframe
-                      src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0"
-                      className="w-full h-full border-0"
-                      title="Permis de Recrutement DETIE"
-                    />
+                  <div className="w-full max-w-[900px] mx-auto">
+                    <div className="relative" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+                      <iframe
+                        src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0"
+                        className="absolute top-0 left-0 w-full h-full border-0"
+                        title="Permis de Recrutement DETIE"
+                        style={{ transform: 'rotate(-90deg)', transformOrigin: 'center center' }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <div className="mt-4">
