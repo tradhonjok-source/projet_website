@@ -56,6 +56,55 @@ export default function RecruitmentPage() {
           </div>
         </section>
 
+        {/* Permis Recrutement Section */}
+        <section className="py-16 bg-gradient-to-b from-amber-500/5 to-background">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-6">
+                <FileCheck className="h-4 w-4 text-amber-400" />
+                <span className="text-sm font-medium text-amber-400 uppercase">
+                  Permis de Recrutement
+                </span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-6">
+                <span className="gradient-text">Permis de Recrutement DETIE</span>
+              </h2>
+              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Consultez notre permis de recrutement officiel délivré par les autorités compétentes.
+              </p>
+
+              {/* PDF Viewer */}
+              <div className="rounded-2xl border border-amber-500/30 overflow-hidden bg-background shadow-xl">
+                <div className="bg-gradient-to-r from-amber-500/10 to-amber-600/10 border-b border-amber-500/30 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileCheck className="h-5 w-5 text-amber-400" />
+                      <span className="font-semibold text-amber-400">PERMIS RECRUTEMENT DETIE.pdf</span>
+                    </div>
+                    <a
+                      href="/documents/permis-recrutement.pdf"
+                      download
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/20 text-amber-400 font-medium hover:bg-amber-500/30 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Télécharger
+                    </a>
+                  </div>
+                </div>
+                <div className="h-[600px] w-full">
+                  <iframe
+                    src="/documents/permis-recrutement.pdf"
+                    className="w-full h-full border-0"
+                    title="Permis de Recrutement DETIE"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Navigation Rapide */}
         <section className="sticky top-16 z-40 bg-background/95 backdrop-blur border-b border-border">
           <div className="container mx-auto px-4 sm:px-6 md:px-8">
