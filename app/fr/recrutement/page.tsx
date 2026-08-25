@@ -41,14 +41,30 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 shadow-xl bg-background">
-                  <div className="w-full max-w-[900px] mx-auto">
-                    <div className="relative" style={{ paddingBottom: '70%' /* Optimized aspect ratio for landscape PDF */ }}>
-                      <iframe
-                        src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0&zoom=150"
-                        className="absolute top-0 left-0 w-full h-full border-0"
-                        title="Permis de Recrutement DETIE"
-                        style={{ transform: 'rotate(-90deg) scale(1.15)', transformOrigin: 'center center' }}
-                      />
+                  <div className="w-full max-w-[1000px] mx-auto p-4">
+                    {/* Rotated PDF container - 90deg counterclockwise */}
+                    <div className="relative w-full" style={{ height: '650px' }}>
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          transform: 'rotate(-90deg)',
+                          transformOrigin: 'center center',
+                          width: '100%',
+                          height: '100%'
+                        }}
+                      >
+                        <iframe
+                          src="/documents/permis-recrutement.pdf#toolbar=0&navpanes=0&scrollbar=0&zoom=page&view=FitH"
+                          className="w-full h-full border-0"
+                          title="Permis de Recrutement DETIE"
+                          style={{
+                            width: '650px',
+                            height: '900px',
+                            transform: 'scale(1.3)',
+                            transformOrigin: 'top left'
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
