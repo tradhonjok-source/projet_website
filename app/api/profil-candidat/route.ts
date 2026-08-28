@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { createPrismaClient } from '@/lib/prisma';
 
 // GET - Récupérer le profil du candidat
 export async function GET(request: NextRequest) {
+  let prisma;
   try {
     const { userId } = await auth();
 
@@ -10,8 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    prisma = createPrismaClient();
 
     const profile = await prisma.candidateProfile.findUnique({
       where: { clerkUserId: userId },
@@ -26,6 +27,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(profile);
   } catch (error) {
     console.error('Erreur GET profil:', error);
+    if (prisma) {
+      await prisma?.$disconnect().catch(() => {});
+    }
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération du profil' },
       { status: 500 }
@@ -35,16 +39,19 @@ export async function GET(request: NextRequest) {
 
 // POST - Sauvegarder le profil du candidat
 export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+  }
+
+  let prisma;
   try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-    }
-
     const body = await request.json();
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    console.log('=== POST /api/profil-candidat ===');
+    console.log('userId:', userId);
+
+    prisma = createPrismaClient();
 
     // Vérifier si l'utilisateur existe, sinon le créer
     let user = await prisma.user.findUnique({
@@ -61,73 +68,83 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Helper pour convertir les dates vides en null
+    const parseDate = (dateValue: any): Date | null => {
+      if (!dateValue || dateValue === '') return null;
+      const date = new Date(dateValue);
+      return isNaN(date.getTime()) ? null : date;
+    };
+
+    // Récupérer l'email depuis Clerk si pas dans le body
+    const email = body.email || body.email || '';
+
     // Sauvegarder ou mettre à jour le profil
     const profile = await prisma.candidateProfile.upsert({
       where: { clerkUserId: userId },
       create: {
         clerkUserId: userId,
-        email: body.email || '',
-        nomFamille: body.nomFamille,
-        prenom: body.prenom,
-        dateNaissance: body.dateNaissance ? new Date(body.dateNaissance) : null,
-        numeroPasseport: body.numeroPasseport,
-        passeportDateDebut: body.passeportDateDebut ? new Date(body.passeportDateDebut) : null,
-        passeportDateFin: body.passeportDateFin ? new Date(body.passeportDateFin) : null,
-        lieuNaissanceVille: body.lieuNaissanceVille,
-        lieuNaissanceProvince: body.lieuNaissanceProvince,
-        lieuNaissancePays: body.lieuNaissancePays,
-        adresseNumero: body.adresseNumero,
-        adresseRue: body.adresseRue,
-        adresseAppartement: body.adresseAppartement,
-        adresseVille: body.adresseVille,
-        adresseProvince: body.adresseProvince,
-        adresseCodePostal: body.adresseCodePostal,
-        adressePays: body.adressePays,
-        telephone: body.telephone,
-        statutImmigration: body.statutImmigration,
+        email: email,
+        nomFamille: body.nomFamille ?? '',
+        prenom: body.prenom ?? '',
+        dateNaissance: parseDate(body.dateNaissance),
+        numeroPasseport: body.numeroPasseport ?? '',
+        passeportDateDebut: parseDate(body.passeportDateDebut),
+        passeportDateFin: parseDate(body.passeportDateFin),
+        lieuNaissanceVille: body.lieuNaissanceVille ?? '',
+        lieuNaissanceProvince: body.lieuNaissanceProvince ?? '',
+        lieuNaissancePays: body.lieuNaissancePays ?? '',
+        adresseNumero: body.adresseNumero ?? '',
+        adresseRue: body.adresseRue ?? '',
+        adresseAppartement: body.adresseAppartement ?? '',
+        adresseVille: body.adresseVille ?? '',
+        adresseProvince: body.adresseProvince ?? '',
+        adresseCodePostal: body.adresseCodePostal ?? '',
+        adressePays: body.adressePays ?? '',
+        telephone: body.telephone ?? '',
+        statutImmigration: body.statutImmigration ?? '',
         controleEntreprise: body.controleEntreprise ?? false,
-        controleEntrepriseDetails: body.controleEntrepriseDetails,
-        etudes: body.etudes,
-        experiences: body.experiences,
-        declarationVille: body.declarationVille,
-        declarationPays: body.declarationPays,
-        declarationNomComplet: body.declarationNomComplet,
-        declarationSignature: body.declarationSignature,
+        controleEntrepriseDetails: body.controleEntrepriseDetails ?? '',
+        etudes: body.etudes ?? [],
+        experiences: body.experiences ?? [],
+        declarationVille: body.declarationVille ?? '',
+        declarationPays: body.declarationPays ?? '',
+        declarationNomComplet: body.declarationNomComplet ?? '',
+        declarationSignature: body.declarationSignature ?? '',
         declarationAcceptee: body.declarationAcceptee ?? false,
-        documents: body.documents,
-        fichiersUploades: body.fichiersUploades,
+        documents: body.documents ?? {},
+        fichiersUploades: body.fichiersUploades ?? {},
       },
       update: {
         email: body.email || '',
-        nomFamille: body.nomFamille,
-        prenom: body.prenom,
-        dateNaissance: body.dateNaissance ? new Date(body.dateNaissance) : null,
-        numeroPasseport: body.numeroPasseport,
-        passeportDateDebut: body.passeportDateDebut ? new Date(body.passeportDateDebut) : null,
-        passeportDateFin: body.passeportDateFin ? new Date(body.passeportDateFin) : null,
-        lieuNaissanceVille: body.lieuNaissanceVille,
-        lieuNaissanceProvince: body.lieuNaissanceProvince,
-        lieuNaissancePays: body.lieuNaissancePays,
-        adresseNumero: body.adresseNumero,
-        adresseRue: body.adresseRue,
-        adresseAppartement: body.adresseAppartement,
-        adresseVille: body.adresseVille,
-        adresseProvince: body.adresseProvince,
-        adresseCodePostal: body.adresseCodePostal,
-        adressePays: body.adressePays,
-        telephone: body.telephone,
-        statutImmigration: body.statutImmigration,
+        nomFamille: body.nomFamille ?? '',
+        prenom: body.prenom ?? '',
+        dateNaissance: parseDate(body.dateNaissance),
+        numeroPasseport: body.numeroPasseport ?? '',
+        passeportDateDebut: parseDate(body.passeportDateDebut),
+        passeportDateFin: parseDate(body.passeportDateFin),
+        lieuNaissanceVille: body.lieuNaissanceVille ?? '',
+        lieuNaissanceProvince: body.lieuNaissanceProvince ?? '',
+        lieuNaissancePays: body.lieuNaissancePays ?? '',
+        adresseNumero: body.adresseNumero ?? '',
+        adresseRue: body.adresseRue ?? '',
+        adresseAppartement: body.adresseAppartement ?? '',
+        adresseVille: body.adresseVille ?? '',
+        adresseProvince: body.adresseProvince ?? '',
+        adresseCodePostal: body.adresseCodePostal ?? '',
+        adressePays: body.adressePays ?? '',
+        telephone: body.telephone ?? '',
+        statutImmigration: body.statutImmigration ?? '',
         controleEntreprise: body.controleEntreprise ?? false,
-        controleEntrepriseDetails: body.controleEntrepriseDetails,
-        etudes: body.etudes,
-        experiences: body.experiences,
-        declarationVille: body.declarationVille,
-        declarationPays: body.declarationPays,
-        declarationNomComplet: body.declarationNomComplet,
-        declarationSignature: body.declarationSignature,
+        controleEntrepriseDetails: body.controleEntrepriseDetails ?? '',
+        etudes: body.etudes ?? [],
+        experiences: body.experiences ?? [],
+        declarationVille: body.declarationVille ?? '',
+        declarationPays: body.declarationPays ?? '',
+        declarationNomComplet: body.declarationNomComplet ?? '',
+        declarationSignature: body.declarationSignature ?? '',
         declarationAcceptee: body.declarationAcceptee ?? false,
-        documents: body.documents,
-        fichiersUploades: body.fichiersUploades,
+        documents: body.documents ?? {},
+        fichiersUploades: body.fichiersUploades ?? {},
       },
     });
 
@@ -140,8 +157,15 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur POST profil:', error);
+    console.error('Détails erreur:', error instanceof Error ? error.message : error);
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
     return NextResponse.json(
-      { error: 'Erreur serveur lors de la sauvegarde du profil' },
+      {
+        error: 'Erreur serveur lors de la sauvegarde du profil',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

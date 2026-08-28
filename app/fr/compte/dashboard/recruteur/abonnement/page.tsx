@@ -4,6 +4,7 @@ import { useUser, SignOutButton } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import {
   Check, CreditCard, LogOut, ArrowLeft, DollarSign, Calendar, FileText,
   Sparkles, Shield, Zap
@@ -65,7 +66,7 @@ const plans: Plan[] = [
   },
 ];
 
-export default function AbonnementRecruteurPage() {
+function AbonnementContent() {
   const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -78,9 +79,9 @@ export default function AbonnementRecruteurPage() {
     }
   }, [isLoaded, isSignedIn, router]);
 
-  const handleSubscribe = async (planId: string, method: 'stripe' | 'paypal') => {
+  const handleStripeSubscribe = async (planId: string) => {
     setIsProcessing(true);
-    setPaymentMethod(method);
+    setPaymentMethod('stripe');
 
     try {
       const response = await fetch('/api/recruteur/abonnement', {
@@ -88,19 +89,14 @@ export default function AbonnementRecruteurPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planId,
-          paymentMethod: method,
+          paymentMethod: 'stripe',
         }),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        // Rediriger vers PayPal ou Stripe
-        if (result.redirectUrl) {
-          window.location.href = result.redirectUrl;
-        } else {
-          router.push('/fr/compte/dashboard/recruteur?payment=success');
-        }
+        router.push('/fr/compte/dashboard/recruteur?payment=success');
       } else {
         alert(result.error || 'Erreur lors du paiement');
       }
@@ -110,6 +106,62 @@ export default function AbonnementRecruteurPage() {
       setIsProcessing(false);
       setPaymentMethod(null);
     }
+  };
+
+  const handlePayPalCreateOrder = async (planId: string) => {
+    try {
+      const response = await fetch('/api/recruteur/paypal/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        return result.orderId;
+      } else {
+        throw new Error(result.error || 'Erreur lors de la création de la commande PayPal');
+      }
+    } catch (error) {
+      console.error('PayPal createOrder error:', error);
+      throw error;
+    }
+  };
+
+  const handlePayPalOnApprove = async (data: { orderID: string }, planId: string) => {
+    setIsProcessing(true);
+    setPaymentMethod('paypal');
+
+    try {
+      const response = await fetch('/api/recruteur/paypal/capture-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: data.orderID,
+          planId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        router.push('/fr/compte/dashboard/recruteur?payment=success');
+      } else {
+        alert(result.error || 'Erreur lors de la capture du paiement');
+      }
+    } catch (error) {
+      console.error('PayPal onApprove error:', error);
+      alert('Erreur de connexion au serveur');
+    } finally {
+      setIsProcessing(false);
+      setPaymentMethod(null);
+    }
+  };
+
+  const handlePayPalOnError = (error: Error) => {
+    console.error('PayPal error:', error);
+    alert('Erreur PayPal: ' + error.message);
   };
 
   if (!isLoaded || !isSignedIn) {
@@ -164,7 +216,7 @@ export default function AbonnementRecruteurPage() {
         <div className="mb-12 rounded-2xl border border-violet-500/20 bg-violet-500/10 p-6 text-center">
           <p className="text-violet-300">
             <Shield className="h-5 w-5 inline mr-2" />
-            Paiement sécurisé par Stripe et PayPal • Annulation à tout moment
+            Paiement sécurisé par PayPal • Carte de crédit bientôt disponible
           </p>
         </div>
 
@@ -223,12 +275,14 @@ export default function AbonnementRecruteurPage() {
               </button>
 
               {selectedPlan === plan.id && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-xs text-center text-muted-foreground mb-2">
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs text-center text-muted-foreground">
                     Choisir le mode de paiement :
                   </p>
+
+                  {/* Bouton Stripe (mock pour l'instant) */}
                   <button
-                    onClick={() => handleSubscribe(plan.id, 'stripe')}
+                    onClick={() => handleStripeSubscribe(plan.id)}
                     disabled={isProcessing && paymentMethod === 'stripe'}
                     className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
@@ -238,19 +292,22 @@ export default function AbonnementRecruteurPage() {
                       <div className="h-3 w-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
                     )}
                   </button>
-                  <button
-                    onClick={() => handleSubscribe(plan.id, 'paypal')}
-                    disabled={isProcessing && paymentMethod === 'paypal'}
-                    className="w-full py-2 rounded-xl bg-[#0070BA] hover:bg-[#0070BA]/90 text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                  >
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 4.47a.77.77 0 0 1 .76-.63h7.194c1.024 0 1.925.183 2.683.548.758.365 1.347.885 1.767 1.56.42.675.63 1.465.63 2.37 0 1.155-.315 2.175-.945 3.06-.63.885-1.5 1.575-2.61 2.07-1.11.495-2.385.743-3.825.743h-1.935a.641.641 0 0 0-.633.74l-.765 4.86a.641.641 0 0 1-.633.54Z" />
-                    </svg>
-                    PayPal
-                    {isProcessing && paymentMethod === 'paypal' && (
-                      <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    )}
-                  </button>
+
+                  {/* Boutons PayPal */}
+                  <div className="relative min-h-[45px]">
+                    <PayPalButtonsWrapper
+                      planId={plan.id}
+                      isProcessing={isProcessing}
+                      paymentMethod={paymentMethod}
+                      onCreateOrder={() => handlePayPalCreateOrder(plan.id)}
+                      onApprove={(data) => handlePayPalOnApprove(data, plan.id)}
+                      onError={handlePayPalOnError}
+                      onCancel={() => {
+                        setIsProcessing(false);
+                        setPaymentMethod(null);
+                      }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -312,6 +369,70 @@ export default function AbonnementRecruteurPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Wrapper component avec PayPalScriptProvider
+function AbonnementRecruteurPage() {
+  return (
+    <PayPalScriptProvider
+      options={{
+        clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || 'sb',
+        intent: 'capture',
+        currency: 'CAD',
+      }}
+    >
+      <AbonnementContent />
+    </PayPalScriptProvider>
+  );
+}
+
+export default AbonnementRecruteurPage;
+
+// Wrapper pour PayPalButtons avec gestion du chargement
+function PayPalButtonsWrapper({
+  planId,
+  isProcessing,
+  paymentMethod,
+  onCreateOrder,
+  onApprove,
+  onError,
+  onCancel,
+}: {
+  planId: string;
+  isProcessing: boolean;
+  paymentMethod: 'stripe' | 'paypal' | null;
+  onCreateOrder: () => Promise<string>;
+  onApprove: (data: { orderID: string }) => Promise<void>;
+  onError: (error: Error) => void;
+  onCancel: () => void;
+}) {
+  const [{ isPending }] = usePayPalScriptReducer();
+
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-[45px]">
+        <div className="animate-spin h-5 w-5 border-2 border-violet-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <PayPalButtons
+      fundingSource="paypal"
+      style={{
+        layout: 'horizontal',
+        color: 'gold',
+        shape: 'rect',
+        label: 'pay',
+        height: 40,
+      }}
+      createOrder={onCreateOrder}
+      onApprove={onApprove}
+      onError={onError}
+      onCancel={onCancel}
+      disabled={isProcessing && paymentMethod !== 'paypal'}
+    />
   );
 }
 

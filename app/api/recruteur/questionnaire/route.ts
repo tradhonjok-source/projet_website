@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { createPrismaClient } from '@/lib/prisma';
 
 // POST - Sauvegarder le questionnaire recruteur
 export async function POST(request: NextRequest) {
@@ -9,10 +10,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
 
+  let prisma;
   try {
     const body = await request.json();
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    prisma = createPrismaClient();
 
     // Vérifier si l'utilisateur existe, sinon le créer
     let user = await prisma.user.findUnique({
@@ -130,6 +131,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur POST questionnaire:', error);
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
     return NextResponse.json(
       { error: 'Erreur serveur lors de la soumission du questionnaire' },
       { status: 500 }

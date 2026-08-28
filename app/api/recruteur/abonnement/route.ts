@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { createPrismaClient } from '@/lib/prisma';
 
-// Configuration des forfaits
+// Configuration des forfaits (prix en dollars CAD)
 const PLANS = {
   mensuel: { price: 500, maxOffres: 1, durationDays: 30 },
   trimestriel: { price: 1000, maxOffres: 5, durationDays: 90 },
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
 
+  let prisma;
   try {
     const body = await request.json();
     const { planId, paymentMethod } = body;
@@ -29,8 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     const plan = PLANS[planId as keyof typeof PLANS];
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    prisma = createPrismaClient();
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + plan.durationDays);
@@ -68,6 +69,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur création abonnement:', error);
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
     return NextResponse.json(
       { error: 'Erreur serveur lors de la création de l\'abonnement' },
       { status: 500 }
@@ -83,9 +87,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
   }
 
+  let prisma;
   try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
+    prisma = createPrismaClient();
 
     const subscription = await prisma.recruiterSubscription.findUnique({
       where: { clerkUserId: userId },
@@ -101,14 +105,12 @@ export async function GET(request: NextRequest) {
     const isActive = subscription.isActive && subscription.endDate > now;
 
     // Compter les offres actives
-    const prisma2 = new PrismaClient();
-    const activePostings = await prisma2.jobPosting.count({
+    const activePostings = await prisma.jobPosting.count({
       where: {
         clerkUserId: userId,
         isActive: true,
       },
     });
-    await prisma2.$disconnect();
 
     return NextResponse.json({
       hasSubscription: true,
@@ -121,6 +123,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur récupération abonnement:', error);
+    if (prisma) {
+      await prisma.$disconnect().catch(() => {});
+    }
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération de l\'abonnement' },
       { status: 500 }

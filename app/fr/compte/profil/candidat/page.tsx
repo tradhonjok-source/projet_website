@@ -340,16 +340,26 @@ export default function ProfilCandidatPage() {
         body: JSON.stringify(profileData),
       });
 
-      const result = await response.json();
+      console.log('Status response:', response.status, response.statusText);
+      const text = await response.text();
+      console.log('Raw response:', text);
+
+      let result;
+      try {
+        result = JSON.parse(text);
+      } catch {
+        result = { error: 'Réponse non-JSON', raw: text.substring(0, 500) };
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || 'Erreur lors de la sauvegarde');
+        console.error('Détails erreur API:', result);
+        throw new Error(result.details || result.error || 'Erreur lors de la sauvegarde');
       }
 
       alert('Profil sauvegardé avec succès !');
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde du profil. Veuillez réessayer.');
+      alert('Erreur lors de la sauvegarde du profil. Veuillez réessayer.\n\nDétail: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setIsSaving(false);
     }
