@@ -283,7 +283,59 @@ export default function ProfilCandidatPage() {
     loadProfile();
   }, [user?.id]);
 
+  const validateForm = (): { valid: boolean; missingFields: string[] } => {
+    const missingFields: string[] = [];
+
+    // Section 1: Renseignements personnels - Tous obligatoires
+    if (!personalInfo.nomFamille?.trim()) missingFields.push('Nom de famille');
+    if (!personalInfo.prenom?.trim()) missingFields.push('Prénom');
+    if (!personalInfo.dateNaissance) missingFields.push('Date de naissance');
+    if (!personalInfo.numeroPasseport?.trim()) missingFields.push('Numéro de passeport');
+    if (!personalInfo.passeportDateDebut) missingFields.push('Date de début de validité du passeport');
+    if (!personalInfo.passeportDateFin) missingFields.push('Date de fin de validité du passeport');
+    if (!personalInfo.lieuNaissanceVille?.trim()) missingFields.push('Ville de naissance');
+    if (!personalInfo.lieuNaissanceProvince?.trim()) missingFields.push('Province/État de naissance');
+    if (!personalInfo.lieuNaissancePays?.trim()) missingFields.push('Pays de naissance');
+    if (!personalInfo.adresseNumero?.trim()) missingFields.push('Numéro de l\'adresse');
+    if (!personalInfo.adresseRue?.trim()) missingFields.push('Rue');
+    if (!personalInfo.adresseVille?.trim()) missingFields.push('Ville de résidence');
+    if (!personalInfo.adresseProvince?.trim()) missingFields.push('Province/État de résidence');
+    if (!personalInfo.adresseCodePostal?.trim()) missingFields.push('Code postal');
+    if (!personalInfo.adressePays?.trim()) missingFields.push('Pays de résidence');
+    if (!personalInfo.telephone?.trim()) missingFields.push('Téléphone');
+    if (!personalInfo.resideQuebec) missingFields.push('Statut de résidence au Québec');
+    if (!personalInfo.statutImmigration?.trim()) missingFields.push('Statut d\'immigration');
+    if (!personalInfo.controleEntreprise) missingFields.push('Contrôle d\'entreprise');
+
+    // Section 2: Études - Au moins une entrée complète requise
+    const hasValidStudy = studies.some(s => s.etablissement?.trim() && s.pays?.trim() && s.diplome?.trim() && s.domaine?.trim() && s.dateDebut && s.dateFin);
+    if (!hasValidStudy) missingFields.push('Au moins une formation complète (établissement, pays, diplôme, domaine, dates)');
+
+    // Section 3: Expériences - Au moins une entrée complète requise
+    const hasValidExperience = experiences.some(e => e.entreprise?.trim() && e.ville?.trim() && e.pays?.trim() && e.poste?.trim() && e.heuresSemaine?.trim() && e.dateDebut && e.dateFin && e.taches?.trim());
+    if (!hasValidExperience) missingFields.push('Au moins une expérience professionnelle complète');
+
+    // Section 4: Déclaration - Tous obligatoires
+    if (!declaration.ville?.trim()) missingFields.push('Ville de déclaration');
+    if (!declaration.pays?.trim()) missingFields.push('Pays de déclaration');
+    if (!declaration.nomComplet?.trim()) missingFields.push('Nom complet pour signature');
+    if (!declaration.signature) missingFields.push('Signature électronique');
+    if (!declaration.accepteConditions) missingFields.push('Acceptation des conditions de déclaration');
+
+    // Section 5: Documents - CV obligatoire
+    if (!documents.cvFrancais) missingFields.push('Curriculum vitae en français (obligatoire)');
+
+    return { valid: missingFields.length === 0, missingFields };
+  };
+
   const handleSave = async () => {
+    // Validation avant sauvegarde
+    const validation = validateForm();
+    if (!validation.valid) {
+      alert('Veuillez remplir tous les champs obligatoires :\n\n• ' + validation.missingFields.join('\n• '));
+      return;
+    }
+
     setIsSaving(true);
     try {
       // Préparer les données pour l'API
@@ -392,10 +444,10 @@ export default function ProfilCandidatPage() {
   const renderSection1 = () => (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 rounded-xl p-6 border border-violet-500/20">
-        <h3 className="text-lg font-semibold text-violet-400 mb-4">1.1 Informations passeport</h3>
+        <h3 className="text-lg font-semibold text-violet-400 mb-4">1.1 Informations passeport <span className="text-xs text-red-400">*</span></h3>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium mb-2">Nom de famille (tel que dans le passeport)</label>
+            <label className="block text-sm font-medium mb-2">Nom de famille (tel que dans le passeport) <span className="text-red-400">*</span></label>
             <input
               type="text"
               value={personalInfo.nomFamille}
@@ -405,7 +457,7 @@ export default function ProfilCandidatPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Prénom(s) (tel que dans le passeport)</label>
+            <label className="block text-sm font-medium mb-2">Prénom(s) (tel que dans le passeport) <span className="text-red-400">*</span></label>
             <input
               type="text"
               value={personalInfo.prenom}
@@ -415,7 +467,7 @@ export default function ProfilCandidatPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Date de naissance</label>
+            <label className="block text-sm font-medium mb-2">Date de naissance <span className="text-red-400">*</span></label>
             <input
               type="date"
               value={personalInfo.dateNaissance}
@@ -424,7 +476,7 @@ export default function ProfilCandidatPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Numéro de passeport</label>
+            <label className="block text-sm font-medium mb-2">Numéro de passeport <span className="text-red-400">*</span></label>
             <input
               type="text"
               value={personalInfo.numeroPasseport}
@@ -433,7 +485,7 @@ export default function ProfilCandidatPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Date de début de validité</label>
+            <label className="block text-sm font-medium mb-2">Date de début de validité <span className="text-red-400">*</span></label>
             <input
               type="date"
               value={personalInfo.passeportDateDebut}
@@ -442,7 +494,7 @@ export default function ProfilCandidatPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Date de fin de validité</label>
+            <label className="block text-sm font-medium mb-2">Date de fin de validité <span className="text-red-400">*</span></label>
             <input
               type="date"
               value={personalInfo.passeportDateFin}
@@ -454,10 +506,10 @@ export default function ProfilCandidatPage() {
       </div>
 
       <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl p-6 border border-emerald-500/20">
-        <h3 className="text-lg font-semibold text-emerald-400 mb-4">1.2 Lieu de naissance</h3>
+        <h3 className="text-lg font-semibold text-emerald-400 mb-4">1.2 Lieu de naissance <span className="text-xs text-red-400">*</span></h3>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium mb-2">Pays</label>
+            <label className="block text-sm font-medium mb-2">Pays <span className="text-red-400">*</span></label>
             <select
               value={personalInfo.lieuNaissancePays}
               onChange={(e) => setPersonalInfo({ ...personalInfo, lieuNaissancePays: e.target.value, lieuNaissanceVille: '' })}
@@ -470,7 +522,7 @@ export default function ProfilCandidatPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Ville</label>
+            <label className="block text-sm font-medium mb-2">Ville <span className="text-red-400">*</span></label>
             <select
               value={personalInfo.lieuNaissanceVille}
               onChange={(e) => setPersonalInfo({ ...personalInfo, lieuNaissanceVille: e.target.value })}
@@ -484,7 +536,7 @@ export default function ProfilCandidatPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Province/État</label>
+            <label className="block text-sm font-medium mb-2">Province/État <span className="text-red-400">*</span></label>
             <input
               type="text"
               value={personalInfo.lieuNaissanceProvince}
@@ -1128,6 +1180,10 @@ export default function ProfilCandidatPage() {
           <p className="text-muted-foreground">
             Renseignements sur la travailleuse ou le travailleur étranger
           </p>
+          <div className="mt-4 flex items-center gap-2 text-sm text-red-400">
+            <span className="font-semibold">*</span>
+            <span>Tous les champs sont obligatoires. Veuillez remplir chaque section complètement avant de continuer.</span>
+          </div>
         </div>
 
         {/* Progress */}
