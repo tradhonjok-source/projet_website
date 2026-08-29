@@ -1,11 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaLibSql } from '@prisma/adapter-libsql';
 
 /**
- * Crée une instance PrismaClient configurée avec l'adaptateur libsql pour SQLite.
+ * Crée une instance PrismaClient configurée avec Prisma Postgres.
  *
- * Prisma v7 requiert un adaptateur explicite pour SQLite - l'URL directe via
- * `datasources.db.url` n'est plus supportée sans adaptateur.
+ * Prisma Postgres utilise l'URL de connexion DATABASE_URL fournie par Vercel.
  *
  * @example
  * ```ts
@@ -15,8 +13,7 @@ import { PrismaLibSql } from '@prisma/adapter-libsql';
  * ```
  */
 export function createPrismaClient() {
-  const adapter = new PrismaLibSql({
-    url: process.env.DATABASE_URL || 'file:./prisma/dev.db',
+  return new PrismaClient({
+    datasourceUrl: process.env.DATABASE_URL,
   });
-  return new PrismaClient({ adapter });
 }
