@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "../fr/globals.css";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cabinet d'Expertise DETIE - Reclutamiento Internacional",
-  description: "Un mundo de talento a su alcance. Especialistas en reclutamiento internacional, apoyo legal e integración.",
+  title: "Gabinete de Experticia DETIE - Reclutamiento Internacional a Medida",
+  description: "Un mundo de talento a su alcance. Especialistas en reclutamiento internacional, asesoría jurídica e integración.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <meta charSet="utf-8" />
+      </head>
+      <body className="min-h-screen flex flex-col">{children}</body>
     </html>
   );
 }
