@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur création PaymentIntent Stripe:', error);
     return NextResponse.json(
-      { error: 'Erreur serveur lors de la création du paiement Stripe' },
+      { error: `Stripe: ${error.message || 'Erreur inconnue'}` },
       { status: 500 }
     );
   }
