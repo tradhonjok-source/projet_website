@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { loadStripe, Stripe, PaymentElement } from '@stripe/stripe-js';
-import { CreditCard, Check, Loader2 } from 'lucide-react';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { CreditCard, Check, Loader2, X } from 'lucide-react';
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
@@ -28,16 +28,21 @@ export default function StripeCheckout({
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const paymentElementRef = useRef<HTMLDivElement>(null);
 
   // Initialiser Stripe
   useEffect(() => {
     const initStripe = async () => {
-      const stripeInstance = await stripePromise;
-      if (stripeInstance) {
+      try {
+        const stripeInstance = await stripePromise;
+        if (!stripeInstance) {
+          throw new Error('Stripe n\'a pas pu être initialisé');
+        }
         setStripe(stripeInstance);
-      } else {
-        onError('Stripe n\'est pas configuré correctement');
+      } catch (err: any) {
+        console.error('Stripe init error:', err);
+        onError(err.message || 'Erreur Stripe');
         setIsLoading(false);
       }
     };
@@ -50,6 +55,7 @@ export default function StripeCheckout({
 
     const createPaymentIntent = async () => {
       try {
+        console.log('Creating payment intent for plan:', planId);
         const response = await fetch('/api/recruteur/stripe/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,46 +63,75 @@ export default function StripeCheckout({
         });
 
         const result = await response.json();
+        console.log('Payment intent response:', result);
 
-        if (response.ok) {
-          setClientSecret(result.clientSecret);
-        } else {
-          onError(result.error || 'Erreur lors de l\'initialisation du paiement');
-          setIsLoading(false);
+        if (!response.ok) {
+          throw new Error(result.error || 'Erreur lors de l\'initialisation du paiement');
         }
-      } catch (error) {
-        onError('Erreur de connexion au serveur');
+
+        if (!result.clientSecret) {
+          throw new Error('clientSecret manquant dans la réponse');
+        }
+
+        setClientSecret(result.clientSecret);
+      } catch (err: any) {
+        console.error('Create payment intent error:', err);
+        setError(err.message || 'Erreur de connexion au serveur');
         setIsLoading(false);
       }
     };
 
     createPaymentIntent();
-  }, [stripe, planId, onError]);
+  }, [stripe, planId]);
 
   // Monter le Payment Element
   useEffect(() => {
     if (!stripe || !clientSecret || !paymentElementRef.current) return;
 
-    const elementsInstance = stripe.elements({
-      clientSecret,
-      appearance: {
-        theme: 'night' as const,
-        variables: {
-          colorPrimary: '#8b5cf6',
-          colorBackground: '#18181b',
-          colorText: '#fafafa',
-          colorDanger: '#ef4444',
-          fontFamily: 'Inter, system-ui, sans-serif',
-          spacingUnit: '8px',
-          borderRadius: '8px',
-        },
-      },
-    });
+    const mountElements = async () => {
+      try {
+        console.log('Mounting Stripe elements...');
+        const elementsInstance = stripe.elements({
+          clientSecret,
+          appearance: {
+            theme: 'night' as const,
+            variables: {
+              colorPrimary: '#8b5cf6',
+              colorBackground: '#18181b',
+              colorText: '#fafafa',
+              colorDanger: '#ef4444',
+              fontFamily: 'Inter, system-ui, sans-serif',
+              spacingUnit: '8px',
+              borderRadius: '8px',
+            },
+          },
+        });
 
-    const paymentElement = elementsInstance.create('payment');
-    paymentElement.mount(paymentElementRef.current!);
-    setElements(elementsInstance);
-    setIsLoading(false);
+        const paymentElement = elementsInstance.create('payment');
+        paymentElement.mount(paymentElementRef.current!);
+
+        paymentElement.on('ready', () => {
+          console.log('Payment element ready');
+          setIsLoading(false);
+        });
+
+        paymentElement.on('change', (event: any) => {
+          if (event.error) {
+            setError(event.error.message);
+          } else {
+            setError(null);
+          }
+        });
+
+        setElements(elementsInstance);
+      } catch (err: any) {
+        console.error('Mount elements error:', err);
+        setError(err.message || 'Erreur lors de l\'affichage du formulaire');
+        setIsLoading(false);
+      }
+    };
+
+    mountElements();
   }, [stripe, clientSecret]);
 
   const handlePayment = async (event: React.FormEvent) => {
@@ -112,15 +147,13 @@ export default function StripeCheckout({
     try {
       const { error: submitError } = await elements.submit();
       if (submitError) {
-        onError(submitError.message || 'Erreur lors de la soumission');
-        setIsProcessing(false);
-        return;
+        throw new Error(submitError.message);
       }
 
       // Récupérer le paymentIntentId du clientSecret
       const paymentIntentId = clientSecret.split('_secret_')[0];
 
-      // Confirmer le paiement SANS redirection
+      // Confirmer le paiement
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
@@ -130,9 +163,7 @@ export default function StripeCheckout({
       });
 
       if (confirmError) {
-        onError(confirmError.message || 'Erreur lors du paiement');
-        setIsProcessing(false);
-        return;
+        throw new Error(confirmError.message);
       }
 
       // Paiement réussi - confirmer dans la base de données
@@ -150,15 +181,28 @@ export default function StripeCheckout({
       if (response.ok) {
         onSuccess();
       } else {
-        onError(confirmResult.error || 'Erreur lors de la confirmation');
-        setIsProcessing(false);
+        throw new Error(confirmResult.error || 'Erreur lors de la confirmation');
       }
-    } catch (error) {
-      console.error('Payment error:', error);
-      onError('Erreur lors du traitement du paiement');
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      onError(err.message || 'Erreur lors du traitement du paiement');
       setIsProcessing(false);
     }
   };
+
+  if (error) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-red-400 text-sm mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-xs text-violet-400 hover:underline"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
