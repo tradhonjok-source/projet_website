@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   }
 
   const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: '2025-09-08.atlas',
+    apiVersion: '2024-06-20',
   });
 
   try {
