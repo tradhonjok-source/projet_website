@@ -64,14 +64,17 @@ export default function StripeCheckout({
       return;
     }
 
+    console.log('[StripeCheckout] About to call createPaymentIntent...');
+
     const createPaymentIntent = async () => {
       try {
-        console.log('Creating payment intent for plan:', planId);
+        console.log('[StripeCheckout] Fetching /api/recruteur/stripe/create-payment-intent...');
         const response = await fetch('/api/recruteur/stripe/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ planId }),
         });
+        console.log('[StripeCheckout] Fetch response status:', response.status);
 
         const result = await response.json();
         console.log('Payment intent response:', result);
@@ -85,6 +88,7 @@ export default function StripeCheckout({
         }
 
         setClientSecret(result.clientSecret);
+        console.log('[StripeCheckout] clientSecret set successfully');
       } catch (err: any) {
         console.error('Create payment intent error:', err);
         setError(err.message || 'Erreur de connexion au serveur');
