@@ -58,7 +58,11 @@ export default function StripeCheckout({
 
   // Créer le PaymentIntent
   useEffect(() => {
-    if (!stripe) return;
+    console.log('[StripeCheckout] useEffect createPaymentIntent - stripe:', stripe ? 'present' : 'null', 'planId:', planId);
+    if (!stripe) {
+      console.log('[StripeCheckout] stripe is null, skipping...');
+      return;
+    }
 
     const createPaymentIntent = async () => {
       try {
