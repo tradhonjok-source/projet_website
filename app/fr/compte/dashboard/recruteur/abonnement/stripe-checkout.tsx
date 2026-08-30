@@ -31,17 +31,24 @@ export default function StripeCheckout({
   const [error, setError] = useState<string | null>(null);
   const paymentElementRef = useRef<HTMLDivElement>(null);
 
+  // Debug: component mounted
+  useEffect(() => {
+    console.log('[StripeCheckout] Component mounted for plan:', planId);
+  }, [planId]);
+
   // Initialiser Stripe
   useEffect(() => {
+    console.log('[StripeCheckout] Initializing Stripe...');
     const initStripe = async () => {
       try {
         const stripeInstance = await stripePromise;
+        console.log('[StripeCheckout] Stripe promise resolved:', stripeInstance ? 'success' : 'null');
         if (!stripeInstance) {
           throw new Error('Stripe n\'a pas pu être initialisé');
         }
         setStripe(stripeInstance);
       } catch (err: any) {
-        console.error('Stripe init error:', err);
+        console.error('[StripeCheckout] Stripe init error:', err);
         onError(err.message || 'Erreur Stripe');
         setIsLoading(false);
       }
