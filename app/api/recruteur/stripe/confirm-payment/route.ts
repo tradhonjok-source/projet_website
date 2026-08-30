@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId as keyof typeof PLANS];
 
-    // Vérifier le statut du PaymentIntent
+    // Vérifier le statut du PaymentIntent (en USD pour test)
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status !== 'succeeded') {

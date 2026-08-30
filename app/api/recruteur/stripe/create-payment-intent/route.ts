@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Créer un PaymentIntent Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: plan.price,
-      currency: 'cad',
+      currency: 'usd',
       description: `Abonnement ${planNames[planId as keyof typeof planNames]} - Cabinet DETIE`,
       metadata: {
         planId,
