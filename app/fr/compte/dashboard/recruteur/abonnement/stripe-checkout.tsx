@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe, PaymentElement } from '@stripe/stripe-js';
 import { CreditCard, Check, Loader2 } from 'lucide-react';
 
 const stripePromise = loadStripe(
@@ -38,6 +38,7 @@ export default function StripeCheckout({
         setStripe(stripeInstance);
       } else {
         onError('Stripe n\'est pas configuré correctement');
+        setIsLoading(false);
       }
     };
     initStripe();
@@ -61,10 +62,10 @@ export default function StripeCheckout({
           setClientSecret(result.clientSecret);
         } else {
           onError(result.error || 'Erreur lors de l\'initialisation du paiement');
+          setIsLoading(false);
         }
       } catch (error) {
         onError('Erreur de connexion au serveur');
-      } finally {
         setIsLoading(false);
       }
     };
@@ -95,15 +96,32 @@ export default function StripeCheckout({
     const paymentElement = elementsInstance.create('payment');
     paymentElement.mount(paymentElementRef.current!);
     setElements(elementsInstance);
+    setIsLoading(false);
   }, [stripe, clientSecret]);
 
-  const handlePayment = async () => {
-    if (!stripe || !elements) return;
+  const handlePayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!stripe || !elements) {
+      onError('Stripe n\'est pas initialisé');
+      return;
+    }
 
     setIsProcessing(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        onError(submitError.message || 'Erreur lors de la soumission');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Récupérer le paymentIntentId du clientSecret
+      const paymentIntentId = clientSecret.split('_secret_')[0];
+
+      // Confirmer le paiement SANS redirection
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/fr/compte/dashboard/recruteur?payment=success`,
@@ -111,34 +129,33 @@ export default function StripeCheckout({
         redirect: 'if_required',
       });
 
-      if (error) {
-        onError(error.message || 'Erreur lors du paiement');
+      if (confirmError) {
+        onError(confirmError.message || 'Erreur lors du paiement');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Paiement réussi - confirmer dans la base de données
+      const response = await fetch('/api/recruteur/stripe/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentIntentId,
+          planId,
+        }),
+      });
+
+      const confirmResult = await response.json();
+
+      if (response.ok) {
+        onSuccess();
       } else {
-        // Paiement réussi - récupérer le paymentIntentId
-        const result = await elements.getElement('payment')?.client_secret;
-        const paymentIntentId = result?.split('_secret_')[0] || '';
-
-        // Confirmer dans la base de données
-        const response = await fetch('/api/recruteur/stripe/confirm-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            paymentIntentId,
-            planId,
-          }),
-        });
-
-        const confirmResult = await response.json();
-
-        if (response.ok) {
-          onSuccess();
-        } else {
-          onError(confirmResult.error || 'Erreur lors de la confirmation');
-        }
+        onError(confirmResult.error || 'Erreur lors de la confirmation');
+        setIsProcessing(false);
       }
     } catch (error) {
+      console.error('Payment error:', error);
       onError('Erreur lors du traitement du paiement');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -153,7 +170,7 @@ export default function StripeCheckout({
   }
 
   return (
-    <div className="space-y-4">
+    <form onSubmit={handlePayment} className="space-y-4">
       {/* Element Stripe pour la carte */}
       <div
         ref={paymentElementRef}
@@ -162,7 +179,7 @@ export default function StripeCheckout({
 
       {/* Bouton de paiement */}
       <button
-        onClick={handlePayment}
+        type="submit"
         disabled={!clientSecret || isProcessing}
         className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
       >
@@ -184,6 +201,6 @@ export default function StripeCheckout({
         <Check className="h-3 w-3 inline mr-1" />
         Paiement sécurisé par Stripe
       </p>
-    </div>
+    </form>
   );
 }
