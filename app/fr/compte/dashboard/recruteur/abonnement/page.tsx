@@ -311,6 +311,7 @@ function AbonnementContent() {
                     </div>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => setShowStripeCheckout(plan.id)}
                       disabled={isProcessing}
                       className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
