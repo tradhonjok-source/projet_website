@@ -7,8 +7,14 @@ import Link from 'next/link';
 import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import {
   Check, CreditCard, LogOut, ArrowLeft, DollarSign, Calendar, FileText,
-  Sparkles, Shield, Zap
+  Sparkles, Shield, Zap, X
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const StripeCheckout = dynamic(
+  () => import('./stripe-checkout'),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground">Chargement du paiement...</div> }
+);
 
 interface Plan {
   id: 'mensuel' | 'trimestriel' | 'annuel';
@@ -37,7 +43,7 @@ const plans: Plan[] = [
   {
     id: 'trimestriel',
     name: 'Trimestriel',
-    price: 1000,
+    price: 1500,
     maxOffres: 5,
     period: '3 mois',
     features: [
@@ -72,6 +78,7 @@ function AbonnementContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null);
+  const [showStripeCheckout, setShowStripeCheckout] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -280,18 +287,38 @@ function AbonnementContent() {
                     Choisir le mode de paiement :
                   </p>
 
-                  {/* Bouton Stripe (mock pour l'instant) */}
-                  <button
-                    onClick={() => handleStripeSubscribe(plan.id)}
-                    disabled={isProcessing && paymentMethod === 'stripe'}
-                    className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Carte de crédit
-                    {isProcessing && paymentMethod === 'stripe' && (
-                      <div className="h-3 w-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                    )}
-                  </button>
+                  {/* Bouton Stripe - Affiche le formulaire si cliqué */}
+                  {showStripeCheckout === plan.id ? (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowStripeCheckout(null)}
+                        className="absolute -top-3 -right-3 p-1 rounded-full bg-background border border-border hover:bg-destructive/10 z-10"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                      <StripeCheckout
+                        planId={plan.id}
+                        planName={plan.name}
+                        amount={plan.price}
+                        onSuccess={() => {
+                          router.push('/fr/compte/dashboard/recruteur?payment=success');
+                        }}
+                        onError={(error) => {
+                          alert(error);
+                          setShowStripeCheckout(null);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowStripeCheckout(plan.id)}
+                      disabled={isProcessing}
+                      className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Carte de crédit (Stripe)
+                    </button>
+                  )}
 
                   {/* Boutons PayPal */}
                   <div className="relative min-h-[45px]">

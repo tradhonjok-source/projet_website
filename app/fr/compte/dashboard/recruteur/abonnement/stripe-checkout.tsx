@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
+import { useEffect, useState, useRef } from 'react';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { CreditCard, Check, Loader2 } from 'lucide-react';
 
 const stripePromise = loadStripe(
@@ -24,27 +24,30 @@ export default function StripeCheckout({
   onError,
 }: StripeCheckoutProps) {
   const [stripe, setStripe] = useState<Stripe | null>(null);
-  const [elements, setElements] = useState<StripeElements | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [elements, setElements] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const paymentElementRef = useRef<HTMLDivElement>(null);
 
+  // Initialiser Stripe
   useEffect(() => {
     const initStripe = async () => {
       const stripeInstance = await stripePromise;
       if (stripeInstance) {
         setStripe(stripeInstance);
+      } else {
+        onError('Stripe n\'est pas configuré correctement');
       }
     };
     initStripe();
-  }, []);
+  }, [onError]);
 
+  // Créer le PaymentIntent
   useEffect(() => {
     if (!stripe) return;
 
     const createPaymentIntent = async () => {
-      setIsLoading(true);
       try {
         const response = await fetch('/api/recruteur/stripe/create-payment-intent', {
           method: 'POST',
@@ -69,25 +72,28 @@ export default function StripeCheckout({
     createPaymentIntent();
   }, [stripe, planId, onError]);
 
+  // Monter le Payment Element
   useEffect(() => {
-    if (!stripe || !clientSecret) return;
+    if (!stripe || !clientSecret || !paymentElementRef.current) return;
 
     const elementsInstance = stripe.elements({
       clientSecret,
       appearance: {
-        theme: 'stripe',
+        theme: 'night' as const,
         variables: {
-          colorPrimary: '#7c3aed',
+          colorPrimary: '#8b5cf6',
           colorBackground: '#18181b',
           colorText: '#fafafa',
           colorDanger: '#ef4444',
           fontFamily: 'Inter, system-ui, sans-serif',
-          spacingUnit: '4px',
+          spacingUnit: '8px',
           borderRadius: '8px',
         },
       },
     });
 
+    const paymentElement = elementsInstance.create('payment');
+    paymentElement.mount(paymentElementRef.current!);
     setElements(elementsInstance);
   }, [stripe, clientSecret]);
 
@@ -100,12 +106,7 @@ export default function StripeCheckout({
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/fr/compte/dashboard/recruteur?payment=success`,
-          payment_method_data: {
-            billing_details: {
-              name: 'Cabinet DETIE',
-            },
-          },
+          return_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/fr/compte/dashboard/recruteur?payment=success`,
         },
         redirect: 'if_required',
       });
@@ -113,25 +114,26 @@ export default function StripeCheckout({
       if (error) {
         onError(error.message || 'Erreur lors du paiement');
       } else {
-        // Paiement réussi - confirmer dans la base de données
+        // Paiement réussi - récupérer le paymentIntentId
+        const result = await elements.getElement('payment')?.client_secret;
+        const paymentIntentId = result?.split('_secret_')[0] || '';
+
+        // Confirmer dans la base de données
         const response = await fetch('/api/recruteur/stripe/confirm-payment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            paymentIntentId: elements.getElement()?.type === 'payment'
-              ? (elements.getElement() as any).client_secret?.split('_secret_')[0]
-              : clientSecret.split('_secret_')[0],
+            paymentIntentId,
             planId,
           }),
         });
 
-        const result = await response.json();
+        const confirmResult = await response.json();
 
         if (response.ok) {
-          setPaymentConfirmed(true);
           onSuccess();
         } else {
-          onError(result.error || 'Erreur lors de la confirmation');
+          onError(confirmResult.error || 'Erreur lors de la confirmation');
         }
       }
     } catch (error) {
@@ -143,18 +145,9 @@ export default function StripeCheckout({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-4">
         <Loader2 className="h-4 w-4 animate-spin" />
         Initialisation du paiement...
-      </div>
-    );
-  }
-
-  if (paymentConfirmed) {
-    return (
-      <div className="flex items-center justify-center gap-2 text-sm text-emerald-400">
-        <Check className="h-4 w-4" />
-        Paiement confirmé !
       </div>
     );
   }
@@ -162,13 +155,10 @@ export default function StripeCheckout({
   return (
     <div className="space-y-4">
       {/* Element Stripe pour la carte */}
-      {elements && (
-        <div className="p-4 rounded-xl border border-border bg-background">
-          <div id="payment-element">
-            {/* Stripe Payment Element sera monté ici */}
-          </div>
-        </div>
-      )}
+      <div
+        ref={paymentElementRef}
+        className="p-4 rounded-xl border border-border bg-background"
+      />
 
       {/* Bouton de paiement */}
       <button
@@ -189,20 +179,11 @@ export default function StripeCheckout({
         )}
       </button>
 
-      {/* Script pour monter le Payment Element */}
-      {elements && (
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var elements = ${JSON.stringify({ clientSecret })};
-                var paymentElement = elements.create('payment');
-                paymentElement.mount('#payment-element');
-              })();
-            `,
-          }}
-        />
-      )}
+      {/* Note de sécurité */}
+      <p className="text-xs text-center text-muted-foreground">
+        <Check className="h-3 w-3 inline mr-1" />
+        Paiement sécurisé par Stripe
+      </p>
     </div>
   );
 }
