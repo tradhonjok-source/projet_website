@@ -3,62 +3,62 @@
 import { SignIn, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Shield, Lock, Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ArrowLeft, Shield, Lock } from 'lucide-react';
 
 export default function ConnexionPage() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
-  // Si l'utilisateur est déjà connecté, afficher un bouton vers le dashboard
-  if (isLoaded && isSignedIn) {
+  // Redirection automatique après connexion selon le rôle
+  useEffect(() => {
+    if (isLoaded && isSignedIn && user && !isRedirecting) {
+      setIsRedirecting(true);
+
+      // Vérifier le rôle de l'utilisateur via les metadata publiques
+      const userRole = user.publicMetadata?.role as string || '';
+
+      if (userRole === 'candidat') {
+        router.push('/fr/compte/dashboard/candidat');
+      } else if (userRole === 'recruteur') {
+        router.push('/fr/compte/dashboard/recruteur');
+      } else if (userRole === 'admin') {
+        router.push('/fr/admin');
+      } else {
+        // Si aucun rôle, rediriger vers la page de sélection
+        router.push('/fr/compte/selection-role');
+      }
+    }
+  }, [isLoaded, isSignedIn, user, router, isRedirecting]);
+
+  // Si l'utilisateur est déjà connecté, afficher un écran de chargement
+  if (isLoaded && isSignedIn && isRedirecting) {
+    const userRole = user?.publicMetadata?.role as string || '';
+
+    // Si aucun rôle, on va vers la page de sélection
+    if (!userRole) {
+      router.push('/fr/compte/selection-role');
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-950/50 via-background to-background">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin h-8 w-8 border-4 border-violet-500 border-t-transparent rounded-full" />
+            <p className="text-muted-foreground">Chargement...</p>
+          </div>
+        </div>
+      );
+    }
+
+    const dashboardType = userRole === 'candidat' ? 'candidat' : userRole === 'recruteur' ? 'recruteur' : 'compte';
+
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-violet-950/50 via-background to-background">
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur">
-          <div className="container mx-auto flex h-16 items-center px-4 md:px-6">
-            <Link
-              href="/fr"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Retour à l'accueil
-            </Link>
-          </div>
-        </header>
-
-        <main className="flex-1 flex items-center justify-center py-12 px-4">
-          <div className="w-full max-w-md text-center">
-            <div className="mb-8">
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/30 mb-4">
-                <Shield className="h-5 w-5 text-emerald-400" />
-                <span className="text-xs font-medium text-emerald-400">
-                  Déjà connecté
-                </span>
-              </div>
-              <h1 className="text-3xl font-bold mb-2 gradient-text">
-                Bienvenue !
-              </h1>
-              <p className="text-muted-foreground">
-                Vous êtes déjà connecté à votre compte
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-background/50 p-6 backdrop-blur-sm space-y-4">
-              <Link
-                href="/fr/compte/dashboard"
-                className="block w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium hover:from-violet-700 hover:to-purple-700 transition-all"
-              >
-                Aller à mon compte
-              </Link>
-              <Link
-                href="/fr"
-                className="block w-full py-3 rounded-xl border border-border hover:bg-border/10 transition-colors"
-              >
-                Retour à l'accueil
-              </Link>
-            </div>
-          </div>
-        </main>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-violet-950/50 via-background to-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin h-8 w-8 border-4 border-violet-500 border-t-transparent rounded-full" />
+          <p className="text-muted-foreground">
+            Redirection vers votre espace {dashboardType}...
+          </p>
+        </div>
       </div>
     );
   }
@@ -115,8 +115,7 @@ export default function ConnexionPage() {
               }}
               routing="hash"
               signUpUrl="/fr/compte/inscription"
-              afterSignInUrl="/fr/compte/dashboard"
-              afterSignUpUrl="/fr/compte/dashboard"
+              forceRedirectUrl="/fr/compte/connexion"
             />
           </div>
 

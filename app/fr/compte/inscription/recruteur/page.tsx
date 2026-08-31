@@ -85,7 +85,7 @@ export default function InscriptionRecruteurPage() {
               routing="path"
               path="/fr/compte/inscription/recruteur"
               signInUrl="/fr/compte/connexion"
-              forceRedirectUrl="/fr/compte/dashboard/recruteur"
+              forceRedirectUrl="/fr/compte/selection-role"
             />
           </div>
 

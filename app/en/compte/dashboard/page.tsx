@@ -31,7 +31,7 @@ export default function DashboardPage() {
     );
   }
 
-  // Page de selection si aucun type n'est defini
+  // Selection page if no type is defined
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-950/50 via-background to-background">
       {/* Header */}

@@ -2,13 +2,10 @@
 
 import { SignIn, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Shield, Lock, Loader2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { ArrowLeft, Shield, Lock } from 'lucide-react';
 
 export default function ConnexionPage() {
   const { isLoaded, isSignedIn } = useUser();
-  const router = useRouter();
 
   // Si l'utilisateur est déjà connecté, afficher un bouton vers le dashboard
   if (isLoaded && isSignedIn) {
@@ -113,10 +110,10 @@ export default function ConnexionPage() {
                   formFieldAction: 'text-violet-400',
                 },
               }}
-              routing="hash"
+              routing="path"
+              path="/es/compte/connexion"
               signUpUrl="/es/compte/inscription"
-              afterSignInUrl="/es/compte/dashboard"
-              afterSignUpUrl="/es/compte/dashboard"
+              forceRedirectUrl="/es/compte/dashboard"
             />
           </div>
 

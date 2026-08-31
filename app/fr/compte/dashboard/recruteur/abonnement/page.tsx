@@ -79,6 +79,11 @@ function AbonnementContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null);
   const [showStripeCheckout, setShowStripeCheckout] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -288,7 +293,7 @@ function AbonnementContent() {
                   </p>
 
                   {/* Bouton Stripe - Affiche le formulaire si cliqué */}
-                  {showStripeCheckout === plan.id ? (
+                  {mounted && showStripeCheckout === plan.id ? (
                     <div className="relative">
                       <button
                         onClick={() => setShowStripeCheckout(null)}
@@ -297,6 +302,7 @@ function AbonnementContent() {
                         <X className="h-3 w-3" />
                       </button>
                       <StripeCheckout
+                        key={`stripe-${plan.id}`}
                         planId={plan.id}
                         planName={plan.name}
                         amount={plan.price}
@@ -309,7 +315,7 @@ function AbonnementContent() {
                         }}
                       />
                     </div>
-                  ) : (
+                  ) : mounted ? (
                     <button
                       type="button"
                       onClick={() => setShowStripeCheckout(plan.id)}
@@ -319,22 +325,28 @@ function AbonnementContent() {
                       <CreditCard className="h-4 w-4" />
                       Carte de crédit (Stripe)
                     </button>
+                  ) : (
+                    <div className="w-full py-2 rounded-xl border border-border flex items-center justify-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-violet-500 border-t-transparent rounded-full" />
+                    </div>
                   )}
 
                   {/* Boutons PayPal */}
                   <div className="relative min-h-[45px]">
-                    <PayPalButtonsWrapper
-                      planId={plan.id}
-                      isProcessing={isProcessing}
-                      paymentMethod={paymentMethod}
-                      onCreateOrder={() => handlePayPalCreateOrder(plan.id)}
-                      onApprove={(data) => handlePayPalOnApprove(data, plan.id)}
-                      onError={handlePayPalOnError}
-                      onCancel={() => {
-                        setIsProcessing(false);
-                        setPaymentMethod(null);
-                      }}
-                    />
+                    {mounted && (
+                      <PayPalButtonsWrapper
+                        planId={plan.id}
+                        isProcessing={isProcessing}
+                        paymentMethod={paymentMethod}
+                        onCreateOrder={() => handlePayPalCreateOrder(plan.id)}
+                        onApprove={(data) => handlePayPalOnApprove(data, plan.id)}
+                        onError={handlePayPalOnError}
+                        onCancel={() => {
+                          setIsProcessing(false);
+                          setPaymentMethod(null);
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               )}

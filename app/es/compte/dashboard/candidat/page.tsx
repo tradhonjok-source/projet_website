@@ -81,7 +81,7 @@ export default function DashboardCandidatPage() {
             title="Consultar las ofertas"
             description="Descubra las oportunidades"
             icon={Briefcase}
-            href="/es/recrutement"
+            href="/es/recruitment"
             gradient="from-blue-500 to-cyan-600"
           />
           <ActionCard

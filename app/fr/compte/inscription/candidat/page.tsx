@@ -85,7 +85,7 @@ export default function InscriptionCandidatPage() {
               routing="path"
               path="/fr/compte/inscription/candidat"
               signInUrl="/fr/compte/connexion"
-              forceRedirectUrl="/fr/compte/dashboard"
+              forceRedirectUrl="/fr/compte/selection-role"
             />
           </div>
 

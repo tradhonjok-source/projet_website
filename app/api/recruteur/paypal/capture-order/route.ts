@@ -156,9 +156,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur capture PayPal:', error);
-    if (prisma) {
-      await prisma.$disconnect().catch(() => {});
-    }
     return NextResponse.json(
       { error: 'Erreur serveur lors de la capture du paiement PayPal' },
       { status: 500 }

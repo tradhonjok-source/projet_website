@@ -21,7 +21,7 @@ export default function InscriptionPage() {
       </header>
 
       {/* Section principale */}
-      <main className="flex-1 flex items-start justify-center py-12 px-4">
+      <main className="flex-1 flex items-start justify-center py-12 px-4 md:px-6">
         <div className="w-full max-w-2xl">
           {/* En-tête */}
           <div className="mb-8 text-center">

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   }
 
   const stripe = new Stripe(stripeSecretKey, {
-    apiVersion: '2024-06-20',
+    apiVersion: '2026-08-26.dahlia',
   });
 
   try {
@@ -55,6 +55,15 @@ export async function POST(request: NextRequest) {
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + plan.durationDays);
+
+    // D'abord, s'assurer que l'utilisateur Recruteur existe dans la table User
+    await prisma.user.create({
+      data: {
+        clerkId: userId,
+        email: '',
+        role: 'recruteur',
+      },
+    }).catch(() => {}); // Ignorer si l'utilisateur existe déjà
 
     const subscription = await prisma.recruiterSubscription.upsert({
       where: { clerkUserId: userId },
@@ -91,8 +100,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Erreur confirmation paiement Stripe:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
     return NextResponse.json(
-      { error: 'Erreur serveur lors de la confirmation du paiement Stripe' },
+      { error: 'Erreur serveur lors de la confirmation du paiement Stripe', details: errorMessage },
       { status: 500 }
     );
   }

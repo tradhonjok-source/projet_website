@@ -75,7 +75,7 @@ export default function HomePage() {
                 className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
               >
                 <Link
-                  href="/es/recrutement"
+                  href="/es/recruitment"
                   className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-2xl hover:shadow-violet-500/50 w-full sm:w-auto justify-center"
                 >
                   <Users className="h-5 w-5" />
@@ -177,7 +177,7 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <Link href="/es/recrutement" className="inline-flex items-center gap-2 text-violet-400 font-medium hover:gap-4 transition-all">
+                <Link href="/es/recruitment" className="inline-flex items-center gap-2 text-violet-400 font-medium hover:gap-4 transition-all">
                   Saber Más
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -214,7 +214,7 @@ export default function HomePage() {
                   ))}
                 </ul>
 
-                <Link href="/es/recrutement" className="inline-flex items-center gap-2 text-emerald-400 font-medium hover:gap-4 transition-all">
+                <Link href="/es/recruitment" className="inline-flex items-center gap-2 text-emerald-400 font-medium hover:gap-4 transition-all">
                   Postular Ahora
                   <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -565,7 +565,7 @@ export default function HomePage() {
                 Nuestro equipo de expertos está listo para acompañarlo en todos sus proyectos de reclutamiento y servicios administrativos.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/es/recrutement" className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-violet-500/50">
+                <Link href="/es/recruitment" className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-violet-500/50">
                   Reclutamiento
                   <ArrowRight className="h-5 w-5" />
                 </Link>

@@ -47,7 +47,7 @@ export default function DashboardRecruteurPage() {
   );
 }
 
-// Composant interne qui utilise searchParams (doit etre dans Suspense)
+// Internal component that uses searchParams (must be in Suspense)
 function DashboardContent({ user, isLoaded, isSignedIn }: { user: any; isLoaded: boolean; isSignedIn: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();

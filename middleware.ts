@@ -20,15 +20,28 @@ export default clerkMiddleware(async (auth, req) => {
     '/fr/recrutement',
     '/en/recruitment',
     '/es/reclutamiento',
-    '/fr/admin',
-    '/en/admin',
-    '/es/admin',
-    '/fr/admin/gestion-actifs',
     '/documents',
     '/images',
     '/flags',
     '/api/webhooks/clerk',
   ];
+
+  // Routes admin qui nécessitent un rôle admin (géré dans les pages elles-mêmes)
+  const adminRoutes = [
+    '/fr/admin',
+    '/en/admin',
+    '/es/admin',
+  ];
+
+  // Vérifier si c'est une route admin
+  if (adminRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+    if (!userId) {
+      const signInUrl = new URL('/fr/compte/connexion', req.url);
+      signInUrl.searchParams.set('redirect_url', pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+    // TODO: Ajouter vérification du rôle admin ici si nécessaire
+  }
 
   // Si c'est une route publique, on ne fait rien
   if (publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
