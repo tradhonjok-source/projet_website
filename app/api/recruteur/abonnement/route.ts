@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
 
 // Configuration des forfaits (prix en dollars CAD)
@@ -32,6 +32,21 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId as keyof typeof PLANS];
     prisma = createPrismaClient();
+
+    // Récupérer l'email de l'utilisateur depuis Clerk
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.emailAddresses[0]?.emailAddress || '';
+
+    // S'assurer que l'utilisateur existe dans la table User
+    await prisma.user.upsert({
+      where: { clerkId: userId },
+      create: {
+        clerkId: userId,
+        email,
+        role: 'recruteur',
+      },
+      update: {},
+    });
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + plan.durationDays);

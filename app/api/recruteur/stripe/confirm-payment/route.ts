@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
 import Stripe from 'stripe';
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const plan = PLANS[planId as keyof typeof PLANS];
 
-    // Vérifier le statut du PaymentIntent (en USD pour test)
+    // Vérifier le statut du PaymentIntent
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
     if (paymentIntent.status !== 'succeeded') {
@@ -50,20 +50,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Récupérer l'email de l'utilisateur depuis Clerk
+    const user = await clerkClient.users.getUser(userId);
+    const email = user.emailAddresses[0]?.emailAddress || '';
+
     // Créer l'abonnement en base de données
     const prisma = createPrismaClient();
 
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + plan.durationDays);
 
-    // D'abord, s'assurer que l'utilisateur Recruteur existe dans la table User
-    await prisma.user.create({
-      data: {
+    // S'assurer que l'utilisateur existe dans la table User
+    await prisma.user.upsert({
+      where: { clerkId: userId },
+      create: {
         clerkId: userId,
-        email: '',
+        email,
         role: 'recruteur',
       },
-    }).catch(() => {}); // Ignorer si l'utilisateur existe déjà
+      update: {},
+    });
 
     const subscription = await prisma.recruiterSubscription.upsert({
       where: { clerkUserId: userId },
