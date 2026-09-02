@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
     prisma = createPrismaClient();
 
     // Récupérer l'email de l'utilisateur depuis Clerk
-    const user = await clerkClient.users.getUser(userId);
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
     const email = user.emailAddresses[0]?.emailAddress || '';
 
     // S'assurer que l'utilisateur existe dans la table User

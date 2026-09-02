@@ -229,9 +229,69 @@ export default function QuestionnaireRecruteurPage() {
     setIsSubmitting(true);
     setSubmitError(null);
 
-    // Vérifier que la signature est présente
-    if (formData.declarationAcceptee && !signatureData) {
-      setSubmitError('Veuillez signer le formulaire avant de soumettre');
+    // Validation complète de tous les champs obligatoires
+    const errors: string[] = [];
+
+    // Section 1: Entreprise
+    if (!formData.entrepriseNom.trim()) errors.push('Le nom de l\'entreprise est requis');
+    if (!formData.entrepriseAdresse.trim()) errors.push('L\'adresse de l\'entreprise est requise');
+    if (!formData.entrepriseVille.trim()) errors.push('La ville de l\'entreprise est requise');
+    if (!formData.entrepriseProvince.trim()) errors.push('La province de l\'entreprise est requise');
+    if (!formData.entrepriseCodePostal.trim()) errors.push('Le code postal de l\'entreprise est requis');
+    if (!formData.entrepriseTelephone.trim()) errors.push('Le téléphone de l\'entreprise est requis');
+    if (!formData.entrepriseEmail.trim()) errors.push('L\'email de l\'entreprise est requis');
+    if (!formData.entrepriseSiteWeb.trim()) errors.push('Le site web de l\'entreprise est requis');
+    if (!formData.entrepriseNE.trim()) errors.push('Le numéro d\'entreprise est requis');
+
+    // Section 2: Lobbying (si inscrit)
+    if (formData.lobbyingInscrit) {
+      if (!formData.lobbyingNumero.trim()) errors.push('Le numéro d\'inscription au lobbying est requis');
+      if (!formData.lobbyingDetails.trim()) errors.push('Les détails du lobbying sont requis');
+    }
+
+    // Section 3: Recrutement
+    if (!formData.recrutementSecteur.trim()) errors.push('Le secteur d\'activité est requis');
+    if (!formData.recrutementPostesOuverts || formData.recrutementPostesOuverts <= 0) errors.push('Le nombre de postes ouverts est requis');
+    if (!formData.recrutementSalaires.trim()) errors.push('L\'échelle salariale est requise');
+    if (!formData.recrutementAvantages.trim()) errors.push('Les avantages sociaux sont requis');
+    if (!formData.recrutementProcessus.trim()) errors.push('Le processus de recrutement est requis');
+
+    // Section 4: International
+    if (!formData.internationalPays.trim()) errors.push('Le pays d\'implantation est requis');
+    if (!formData.internationalPartenaires.trim()) errors.push('Les partenaires internationaux sont requis');
+    if (!formData.internationalExperience.trim()) errors.push('L\'expérience internationale est requise');
+
+    // Section 5: Permis/Ordre
+    if (formData.permisRequis && !formData.permisTypes.trim()) errors.push('Les types de permis sont requis');
+    if (!formData.ordreProfessionnel.trim()) errors.push('L\'ordre professionnel est requis');
+    if (!formData.ordreNumero.trim()) errors.push('Le numéro d\'ordre est requis');
+
+    // Section 6: Québec
+    if (!formData.qcRegion.trim()) errors.push('La région du Québec est requise');
+    if (!formData.qcVillePrimaire.trim()) errors.push('La ville principale est requise');
+    if (!formData.qcEtablissements.trim()) errors.push('Les établissements au Québec sont requis');
+
+    // Section 7: Travailleur étranger
+    if (!formData.travailleurNom.trim()) errors.push('Le nom du travailleur est requis');
+    if (!formData.travailleurPrenom.trim()) errors.push('Le prénom du travailleur est requis');
+    if (!formData.travailleurEmail.trim()) errors.push('L\'email du travailleur est requis');
+    if (!formData.travailleurTelephone.trim()) errors.push('Le téléphone du travailleur est requis');
+    if (!formData.travailleurNationalite.trim()) errors.push('La nationalité du travailleur est requise');
+    if (!formData.travailleurPasseport.trim()) errors.push('Le numéro de passeport est requis');
+    if (!formData.travailleurFormation.trim()) errors.push('La formation du travailleur est requise');
+    if (!formData.travailleurExperience.trim()) errors.push('L\'expérience du travailleur est requise');
+    if (!formData.travailleurCompetences.trim()) errors.push('Les compétences du travailleur sont requises');
+    if (!formData.travailleurLangues.trim()) errors.push('Les langues parlées sont requises');
+
+    // Section 8: Déclaration
+    if (!formData.declarationAcceptee) errors.push('Vous devez accepter la déclaration');
+    if (!formData.declarationNom.trim()) errors.push('Le nom pour la signature est requis');
+    if (!formData.declarationDate.trim()) errors.push('La date est requise');
+    if (!formData.declarationAcceptee && !signatureData) errors.push('La signature électronique est requise');
+    if (formData.declarationAcceptee && !signatureData) errors.push('La signature électronique est requise');
+
+    if (errors.length > 0) {
+      setSubmitError('Veuillez remplir tous les champs obligatoires :\n• ' + errors.join('\n• '));
       setIsSubmitting(false);
       return;
     }
@@ -256,7 +316,11 @@ export default function QuestionnaireRecruteurPage() {
           router.push('/fr/compte/dashboard/recruteur');
         }, 2000);
       } else {
-        setSubmitError(result.error || 'Erreur lors de la soumission');
+        // Afficher l'erreur détaillée si disponible
+        const errorMessage = result.details
+          ? `${result.error} - ${result.details}`
+          : (result.error || 'Erreur lors de la soumission');
+        setSubmitError(errorMessage);
       }
     } catch (error) {
       setSubmitError('Erreur de connexion au serveur');

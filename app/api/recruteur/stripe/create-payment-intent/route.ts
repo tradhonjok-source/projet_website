@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 // Configuration des forfaits (prix en cents CAD)
 const PLANS = {
   mensuel: { price: 50000, maxOffres: 1, durationDays: 30 },
-  trimestriel: { price: 150000, maxOffres: 5, durationDays: 90 },
+  trimestriel: { price: 100000, maxOffres: 5, durationDays: 90 },
   annuel: { price: 150000, maxOffres: 12, durationDays: 365 },
 };
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Créer un PaymentIntent Stripe
     const paymentIntent = await stripe.paymentIntents.create({
       amount: plan.price,
-      currency: 'usd',
+      currency: 'cad',
       description: `Abonnement ${planNames[planId as keyof typeof planNames]} - Cabinet DETIE`,
       metadata: {
         planId,

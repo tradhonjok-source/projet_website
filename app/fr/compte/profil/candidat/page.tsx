@@ -220,7 +220,8 @@ export default function ProfilCandidatPage() {
       if (!user?.id) return;
 
       try {
-        const token = await window.Clerk?.session?.getToken();
+        const session = (window as any).Clerk?.session;
+        const token = session ? await session.getToken() : '';
         const response = await fetch('/api/profil-candidat', {
           headers: {
             'x-clerk-user-id': user.id,
@@ -380,7 +381,8 @@ export default function ProfilCandidatPage() {
       };
 
       // Récupérer le token Clerk
-      const token = await window.Clerk?.session?.getToken();
+      const session = (window as any).Clerk?.session;
+      const token = session ? await session.getToken() : '';
 
       const response = await fetch('/api/profil-candidat', {
         method: 'POST',
@@ -408,7 +410,7 @@ export default function ProfilCandidatPage() {
         throw new Error(result.details || result.error || 'Erreur lors de la sauvegarde');
       }
 
-      alert('Profil sauvegardé avec succès !');
+      alert('Profil sauvegardé avec succès !\n\nUne notification a été envoyée à notre équipe administrative pour validation.\nVous serez contacté une fois votre profil validé.');
     } catch (error) {
       console.error('Erreur sauvegarde:', error);
       alert('Erreur lors de la sauvegarde du profil. Veuillez réessayer.\n\nDétail: ' + (error instanceof Error ? error.message : String(error)));
@@ -1103,7 +1105,7 @@ export default function ProfilCandidatPage() {
                 {uploadedFiles[doc.key] ? (
                   <div className="flex items-center gap-2 text-xs text-emerald-400">
                     <CheckCircle2 className="h-4 w-4" />
-                    <span className="max-w-[150px] truncate">{uploadedFiles[doc.key].name}</span>
+                    <span className="max-w-[150px] truncate">{(uploadedFiles[doc.key] as File)?.name}</span>
                   </div>
                 ) : (
                   <label

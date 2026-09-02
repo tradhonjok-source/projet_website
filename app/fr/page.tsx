@@ -140,7 +140,7 @@ export default function HomePage() {
                 <span className="gradient-text">Connectez-vous aux Meilleurs Talents Mondiaux</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Nous connectons les employeurs canadiens avec les meilleurs talents internationaux. De la selection a l integration, nous vous guidons a chaque etape.
+                Nous connectons les employeurs canadiens avec les meilleurs talents internationaux. De la sélection à l'intégration, nous vous guidons à chaque étape.
               </p>
             </div>
 
@@ -159,16 +159,16 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-bold text-violet-400">Pour les Employeurs</h3>
-                    <p className="text-sm text-muted-foreground">Trouvez les talents ideaux</p>
+                    <p className="text-sm text-muted-foreground">Trouvez les talents idéaux</p>
                   </div>
                 </div>
 
                 <ul className="space-y-4 mb-6">
                   {[
-                    { icon: FileText, text: 'Acces a un vivier mondial de talents qualifies' },
+                    { icon: FileText, text: 'Accès à un vivier mondial de talents qualifiés' },
                     { icon: CheckCircle2, text: 'Sélection rigoureuse et personnalisée' },
-                    { icon: Handshake, text: 'Gestion complete des permis de travail' },
-                    { icon: TrendingUp, text: 'Integration reussie de vos nouveaux employs' },
+                    { icon: Handshake, text: 'Gestion complète des permis de travail' },
+                    { icon: TrendingUp, text: 'Intégration réussie de vos nouveaux employés' },
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <item.icon className="h-5 w-5 text-violet-400 flex-shrink-0 mt-0.5" />
@@ -233,13 +233,13 @@ export default function HomePage() {
             <div className="text-center mb-16">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 mb-6">
                 <Briefcase className="h-4 w-4 text-amber-400" />
-                <span className="text-sm font-medium text-amber-400 uppercase tracking-wider">Administrateur Agree</span>
+                <span className="text-sm font-medium text-amber-400 uppercase tracking-wider">Administrateur Agréé</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-                <span className="gradient-text">Services Professionnels Agrees</span>
+                <span className="gradient-text">Services Professionnels Agréés</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-                Membre de l Ordre des Administrateurs Agrees du Quebec - Canada. Permis AdmA A24-52400.
+                Membre de l'Ordre des Administrateurs Agréés du Québec - Canada. Permis AdmA A24-52400.
               </p>
             </div>
 
@@ -248,32 +248,32 @@ export default function HomePage() {
               {[
                 {
                   icon: TrendingUp,
-                  title: 'Restructuration Financiere',
-                  desc: 'Nous aidons les entites en difficulte a surmonter leurs crises. Analyse, negociation avec creanciers, restructuration de dette et plans de redressement.',
+                  title: 'Restructuration Financière',
+                  desc: 'Nous aidons les entités en difficulté à surmonter leurs crises. Analyse, négociation avec créanciers, restructuration de dette et plans de redressement.',
                   gradient: 'from-amber-500 to-orange-600'
                 },
                 {
                   icon: Globe,
-                  title: 'Gestion d Actifs',
-                  desc: 'Nos experts sont des gestionnaires d actifs reconnus qui gerent et font croitre un portefeuille de placements durables.',
+                  title: 'Gestion d\'Actifs',
+                  desc: 'Nos experts sont des gestionnaires d\'actifs reconnus qui gèrent et font croître un portefeuille de placements durables.',
                   gradient: 'from-amber-500 to-orange-600'
                 },
                 {
                   icon: Shield,
                   title: 'Fiducie & Mandataire',
-                  desc: 'Gestion de l argent d une tierce personne via la fiducie et le compte en fidicommis pour proteger les biens a long terme.',
+                  desc: 'Gestion de l\'argent d\'une tierce personne via la fiducie et le compte en fidicommis pour protéger les biens à long terme.',
                   gradient: 'from-amber-500 to-orange-600'
                 },
                 {
                   icon: Zap,
-                  title: 'Optimisation Strategique',
-                  desc: 'Optimisation de la programmation strategique des territoires basee sur la concertation locale et l analyse de donnees.',
+                  title: 'Optimisation Stratégique',
+                  desc: 'Optimisation de la programmation stratégique des territoires basée sur la concertation locale et l\'analyse de données.',
                   gradient: 'from-amber-500 to-orange-600'
                 },
                 {
                   icon: Building2,
                   title: 'Centre Toor Siyo',
-                  desc: 'Conception et mise en oeuvre de solutions nouvelles avec des partenaires mondiaux dans une dynamique d amelioration continue.',
+                  desc: 'Conception et mise en oeuvre de solutions nouvelles avec des partenaires mondiaux dans une dynamique d\'amélioration continue.',
                   gradient: 'from-amber-500 to-orange-600'
                 },
                 {
@@ -504,7 +504,7 @@ export default function HomePage() {
                 <span className="gradient-text">Contactez-Nous</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Notre equipe est prete a repondre a toutes vos questions
+                Notre équipe est prête à répondre à toutes vos questions
               </p>
             </div>
 
@@ -560,9 +560,9 @@ export default function HomePage() {
                 <ArrowRight className="h-4 w-4 text-violet-400" />
                 <span className="text-sm font-medium text-violet-400 uppercase tracking-wider">Demarrer</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Pret a Commencer ?</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4">Prêt à Commencer ?</h2>
               <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Notre equipe d experts est prete a vous accompagner dans tous vos projets de recrutement et services administratifs.
+                Notre équipe d'experts est prête à vous accompagner dans tous vos projets de recrutement et services administratifs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href="/fr/recrutement" className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-8 py-4 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-violet-500/50">
@@ -570,7 +570,7 @@ export default function HomePage() {
                   <ArrowRight className="h-5 w-5" />
                 </Link>
                 <Link href="/fr/admin" className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-amber-600 to-orange-600 px-8 py-4 text-base font-medium text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-amber-500/50">
-                  Administrateur Agree
+                  Administrateur Agréé
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </div>

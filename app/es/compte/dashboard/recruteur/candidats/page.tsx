@@ -5,22 +5,23 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeft, LogOut, Search, Mail, MapPin,
-  Briefcase, GraduationCap, Star, Eye,
-  CheckCircle, AlertCircle
+  ArrowLeft, LogOut, Search, MapPin, Mail,
+  Briefcase, Eye,
+  CheckCircle, AlertCircle, X
 } from 'lucide-react';
 
 interface Candidat {
   id: string;
-  clerkUserId: string;
+  email: string;
   nomFamille: string | null;
   prenom: string | null;
-  adresseVille: string | null;
-  adresseProvince: string | null;
   telephone: string | null;
-  etudes: any[] | null;
-  experiencias: any[] | null;
+  lieuNaissancePays: string | null;
+  adresseVille: string | null;
+  adressePays: string | null;
+  statutImmigration: string | null;
   createdAt: string;
+  userEmail: string;
 }
 
 export default function CandidatsRecruteurPage() {
@@ -29,10 +30,10 @@ export default function CandidatsRecruteurPage() {
   const [candidats, setCandidats] = useState<Candidat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [secteurFilter, setSecteurFilter] = useState('');
-  const [langueFilter, setLangueFilter] = useState('');
   const [hasSubscription, setHasSubscription] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCandidat, setSelectedCandidat] = useState<Candidat | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -50,38 +51,42 @@ export default function CandidatsRecruteurPage() {
     try {
       const response = await fetch('/api/recruteur/abonnement');
       const data = await response.json();
-      if (data.hasSubscription && data.subscription.isActive) {
+      if (data.hasSubscription && data.subscription?.isActive) {
         setHasSubscription(true);
         fetchCandidats();
       } else {
         setHasSubscription(false);
       }
     } catch (error) {
-      console.error('Error al verificar suscripción:', error);
+      console.error('Error verificando suscripción:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const fetchCandidats = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const params = new URLSearchParams();
-      if (searchTerm) params.set('search', searchTerm);
-      if (secteurFilter) params.set('secteur', secteurFilter);
-      if (langueFilter) params.set('langue', langueFilter);
+      const session = (window as any).Clerk?.session;
+      const token = session ? await session.getToken() : '';
+      const response = await fetch('/api/recruteur/candidats', {
+        headers: {
+          'x-clerk-user-id': user?.id || '',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
 
-      const response = await fetch(`/api/candidatos?${params}`);
       if (response.ok) {
         const result = await response.json();
-        setCandidats(result);
-        setError(null);
+        setCandidats(result.candidates || result);
       } else {
         const result = await response.json();
-        setError(result.error || 'Error al obtener candidatos');
+        throw new Error(result.error || 'Error al obtener candidatos');
       }
     } catch (error) {
-      console.error('Error al cargar candidatos:', error);
-      setError('Error de conexión');
+      console.error('Error cargando candidatos:', error);
+      setError((error as Error).message || 'Error de conexión');
     } finally {
       setIsLoading(false);
     }
@@ -89,10 +94,21 @@ export default function CandidatsRecruteurPage() {
 
   useEffect(() => {
     if (hasSubscription) {
-      const timer = setTimeout(() => fetchCandidats(), 500);
-      return () => clearTimeout(timer);
+      fetchCandidats();
     }
-  }, [searchTerm, secteurFilter, langueFilter, hasSubscription]);
+  }, [hasSubscription]);
+
+  const filteredCandidats = candidats.filter(candidat => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      candidat.nomFamille?.toLowerCase().includes(searchLower) ||
+      candidat.prenom?.toLowerCase().includes(searchLower) ||
+      candidat.email.toLowerCase().includes(searchLower) ||
+      candidat.adresseVille?.toLowerCase().includes(searchLower) ||
+      candidat.adressePays?.toLowerCase().includes(searchLower) ||
+      candidat.lieuNaissancePays?.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -104,7 +120,6 @@ export default function CandidatsRecruteurPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-950/30 via-background to-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/es" className="text-xl font-bold gradient-text">Agencia DETIE</Link>
@@ -123,7 +138,6 @@ export default function CandidatsRecruteurPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Botón volver */}
         <Link
           href="/es/compte/dashboard/recruteur"
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
@@ -132,25 +146,23 @@ export default function CandidatsRecruteurPage() {
           Volver al dashboard
         </Link>
 
-        {/* Encabezado de página */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Buscar Candidatos</h1>
           <p className="text-muted-foreground">
-            Encuentre el talento ideal entre nuestros candidatos
+            Encuentre el talento ideal entre nuestros candidatos validados
           </p>
         </div>
 
-        {/* Verificación de suscripción */}
         {!hasSubscription && !isLoading && (
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-6 mb-8">
             <div className="flex items-start gap-4">
               <AlertCircle className="h-6 w-6 text-amber-400 mt-1" />
               <div>
                 <h3 className="text-lg font-semibold text-amber-400 mb-2">
-                  Suscripción Requerida
+                  Suscripción requerida
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Para acceder a la base de datos de candidatos y publicar ofertas, debe suscribirse a un plan.
+                  Para acceder a la base de candidatos y publicar ofertas, debe suscribirse a un plan.
                 </p>
                 <Link
                   href="/es/compte/dashboard/recruteur/abonnement"
@@ -166,55 +178,19 @@ export default function CandidatsRecruteurPage() {
 
         {hasSubscription && (
           <>
-            {/* Barra de búsqueda y filtros */}
-            <div className="grid gap-4 md:grid-cols-4 mb-8">
-              <div className="md:col-span-2 relative">
+            <div className="mb-8">
+              <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, ciudad, empresa..."
+                  placeholder="Buscar por nombre, email, ciudad, país..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>
-              <div>
-                <select
-                  value={secteurFilter}
-                  onChange={(e) => setSecteurFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                >
-                  <option value="">Todos los sectores</option>
-                  <option value="technologie">Tecnología</option>
-                  <option value="sante">Salud</option>
-                  <option value="education">Educación</option>
-                  <option value="construction">Construcción</option>
-                  <option value="services">Servicios</option>
-                  <option value="manufacturier">Manufactura</option>
-                  <option value="finance">Finanzas</option>
-                  <option value="commerce">Comercio</option>
-                </select>
-              </div>
-              <div>
-                <select
-                  value={langueFilter}
-                  onChange={(e) => setLangueFilter(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-violet-500"
-                >
-                  <option value="">Todos los idiomas</option>
-                  <option value="français">Francés</option>
-                  <option value="anglais">Inglés</option>
-                  <option value="espagnol">Español</option>
-                  <option value="allemand">Alemán</option>
-                  <option value="italien">Italiano</option>
-                  <option value="portugais">Portugués</option>
-                  <option value="arabe">Árabe</option>
-                  <option value="chinois">Chino</option>
-                </select>
-              </div>
             </div>
 
-            {/* Resultados */}
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin h-8 w-8 border-4 border-violet-500 border-t-transparent rounded-full" />
@@ -224,17 +200,17 @@ export default function CandidatsRecruteurPage() {
                 <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-4" />
                 <p className="text-red-400">{error}</p>
               </div>
-            ) : candidats.length === 0 ? (
+            ) : filteredCandidats.length === 0 ? (
               <div className="text-center py-12 rounded-xl border border-border bg-background/50">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground mb-4">Ningún candidato encontrado</p>
+                <p className="text-muted-foreground mb-4">No se encontraron candidatos</p>
                 <p className="text-sm text-muted-foreground">
                   Intente modificar sus criterios de búsqueda
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {candidats.map((candidat) => (
+                {filteredCandidats.map((candidat) => (
                   <div
                     key={candidat.id}
                     className="rounded-xl border border-border bg-background/50 p-6 hover:border-violet-500/30 transition-colors"
@@ -245,70 +221,49 @@ export default function CandidatsRecruteurPage() {
                           <h3 className="text-xl font-semibold">
                             {candidat.prenom} {candidat.nomFamille}
                           </h3>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400">
+                            <CheckCircle className="h-3 w-3" />
+                            Validado
+                          </span>
                         </div>
                         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-3">
                           {candidat.adresseVille && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-4 w-4" />
-                              {candidat.adresseVille}, {candidat.adresseProvince || ''}
+                              {candidat.adresseVille}, {candidat.adressePays}
+                            </span>
+                          )}
+                          {candidat.statutImmigration && (
+                            <span className="flex items-center gap-1">
+                              <Briefcase className="h-4 w-4" />
+                              {candidat.statutImmigration}
                             </span>
                           )}
                         </div>
 
-                        {/* Experiencias */}
-                        {candidat.experiences && Array.isArray(candidat.experiences) && candidat.experiences.length > 0 && (
-                          <div className="mb-3">
-                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                              <Briefcase className="h-4 w-4" />
-                              Experiencias
-                            </h4>
-                            <div className="space-y-2">
-                              {candidat.experiences.slice(0, 2).map((exp: any, i: number) => (
-                                <div key={i} className="text-sm text-muted-foreground">
-                                  <span className="font-medium">{exp.poste}</span>
-                                  {exp.entreprise && <> en <span className="text-foreground">{exp.entreprise}</span></>}
-                                  {exp.secteur && <span className="text-xs"> • {exp.secteur}</span>}
-                                </div>
-                              ))}
-                            </div>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span>{candidat.email}</span>
                           </div>
-                        )}
-
-                        {/* Estudios */}
-                        {candidat.etudes && Array.isArray(candidat.etudes) && candidat.etudes.length > 0 && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
-                              <GraduationCap className="h-4 w-4" />
-                              Formación
-                            </h4>
-                            <div className="space-y-1">
-                              {candidat.etudes.slice(0, 2).map((etude: any, i: number) => (
-                                <div key={i} className="text-sm text-muted-foreground">
-                                  {etude.diplome}
-                                  {etude.ecole && <span className="text-xs"> • {etude.ecole}</span>}
-                                </div>
-                              ))}
+                          {candidat.telephone && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span>Teléfono: {candidat.telephone}</span>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => {/* TODO: abrir modal detalle */}}
-                          className="px-4 py-2 rounded-xl bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors flex items-center gap-2"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Ver perfil
-                        </button>
-                        <button
-                          onClick={() => {/* TODO: agregar a favoritos */}}
-                          className="p-2 rounded-lg hover:bg-amber-500/10 text-amber-400"
-                          title="Agregar a favoritos"
-                        >
-                          <Star className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedCandidat(candidat);
+                          setShowDetailsModal(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-violet-500/10 text-violet-400 hover:bg-violet-500/20 transition-colors flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Ver perfil
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -317,6 +272,112 @@ export default function CandidatsRecruteurPage() {
           </>
         )}
       </main>
+
+      {showDetailsModal && selectedCandidat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-2xl rounded-xl bg-background border border-border p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold">
+                Perfil de {selectedCandidat.prenom} {selectedCandidat.nomFamille}
+              </h3>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="p-2 rounded-lg hover:bg-secondary transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="rounded-xl bg-secondary/50 p-4">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Información de contacto
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span>{selectedCandidat.email}</span>
+                  </div>
+                  {selectedCandidat.telephone && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Teléfono:</span>
+                      <span>{selectedCandidat.telephone}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email de usuario:</span>
+                    <span>{selectedCandidat.userEmail}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-secondary/50 p-4">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Ubicación
+                </h4>
+                <div className="space-y-2 text-sm">
+                  {selectedCandidat.adresseVille && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Ciudad:</span>
+                      <span>{selectedCandidat.adresseVille}</span>
+                    </div>
+                  )}
+                  {selectedCandidat.adressePays && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">País de residencia:</span>
+                      <span>{selectedCandidat.adressePays}</span>
+                    </div>
+                  )}
+                  {selectedCandidat.lieuNaissancePays && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">País de nacimiento:</span>
+                      <span>{selectedCandidat.lieuNaissancePays}</span>
+                    </div>
+                  )}
+                  {selectedCandidat.statutImmigration && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Estado de inmigración:</span>
+                      <span>{selectedCandidat.statutImmigration}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-secondary/50 p-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Fecha de solicitud:</span>
+                  <span>{new Date(selectedCandidat.createdAt).toLocaleDateString('es-ES')}</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
+                <p className="text-sm text-amber-200">
+                  Para contactar a este candidato, use la información de contacto anterior.
+                  Este candidato ha sido validado por nuestro equipo administrativo.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <a
+                href={`mailto:${selectedCandidat.email}`}
+                className="flex-1 px-4 py-2 rounded-xl bg-violet-500 text-white hover:bg-violet-600 transition-colors text-center"
+              >
+                <Mail className="h-4 w-4 inline mr-2" />
+                Contactar por email
+              </a>
+              <button
+                onClick={() => setShowDetailsModal(false)}
+                className="px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

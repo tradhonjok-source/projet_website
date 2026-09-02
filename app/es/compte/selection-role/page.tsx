@@ -32,9 +32,18 @@ export default function SelectionRolePage() {
     setError(null);
 
     try {
-      await clerk.user.update({
-        publicMetadata: { role },
+      // Actualizar rol a través de la API del servidor
+      const response = await fetch('/api/user/set-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error al establecer el rol');
+      }
 
       if (role === 'candidat') {
         router.push('/es/compte/dashboard/candidat');
@@ -43,7 +52,7 @@ export default function SelectionRolePage() {
       }
     } catch (err) {
       console.error('Error setting role:', err);
-      setError('Se produjo un error. Por favor, inténtelo de nuevo.');
+      setError((err as Error).message || 'Se produjo un error. Por favor, inténtelo de nuevo.');
       setIsSettingRole(false);
     }
   };

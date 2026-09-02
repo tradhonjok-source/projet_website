@@ -32,9 +32,9 @@ export default function StripeCheckout({
   const paymentElementRef = useRef<HTMLDivElement>(null);
   const elementMountedRef = useRef(false);
 
-  // Initialiser Stripe - une seule fois au montage
+  // Inicializar Stripe
   useEffect(() => {
-    console.log('[StripeCheckout] Initializing Stripe...');
+    console.log('[StripeCheckout] Inicializando Stripe...');
     let cancelled = false;
 
     const initStripe = async () => {
@@ -42,7 +42,7 @@ export default function StripeCheckout({
         const stripeInstance = await stripePromise;
         console.log('[StripeCheckout] Stripe promise resolved:', stripeInstance ? 'success' : 'null');
         if (!stripeInstance) {
-          throw new Error('Stripe n\'a pas pu être initialisé');
+          throw new Error('Stripe no pudo ser inicializado');
         }
         if (!cancelled) {
           setStripe(stripeInstance);
@@ -50,7 +50,7 @@ export default function StripeCheckout({
       } catch (err: any) {
         console.error('[StripeCheckout] Stripe init error:', err);
         if (!cancelled) {
-          setError(err.message || 'Erreur Stripe');
+          setError(err.message || 'Error de Stripe');
           setIsLoading(false);
         }
       }
@@ -62,7 +62,7 @@ export default function StripeCheckout({
     };
   }, []);
 
-  // Créer le PaymentIntent
+  // Crear PaymentIntent
   useEffect(() => {
     console.log('[StripeCheckout] createPaymentIntent - stripe:', stripe ? 'present' : 'null');
     if (!stripe) {
@@ -85,22 +85,22 @@ export default function StripeCheckout({
         console.log('[StripeCheckout] Payment intent response:', result);
 
         if (!response.ok) {
-          throw new Error(result.error || 'Erreur lors de l\'initialisation du paiement');
+          throw new Error(result.error || 'Error al inicializar el pago');
         }
 
         if (!result.clientSecret) {
-          throw new Error('clientSecret manquant dans la réponse');
+          throw new Error('clientSecret faltante en la respuesta');
         }
 
         if (!cancelled) {
           console.log('[StripeCheckout] Setting clientSecret:', result.clientSecret.substring(0, 10) + '...');
           setClientSecret(result.clientSecret);
-          elementMountedRef.current = false; // Reset pour permettre le montage
+          elementMountedRef.current = false;
         }
       } catch (err: any) {
         console.error('[StripeCheckout] Create payment intent error:', err);
         if (!cancelled) {
-          setError(err.message || 'Erreur de connexion au serveur');
+          setError(err.message || 'Error de conexión al servidor');
           setIsLoading(false);
         }
       }
@@ -113,7 +113,7 @@ export default function StripeCheckout({
     };
   }, [stripe, planId]);
 
-  // Monter le Payment Element
+  // Montar Payment Element
   useEffect(() => {
     console.log('[StripeCheckout] Mount useEffect - stripe:', stripe ? 'present' : 'null', 'clientSecret:', clientSecret ? 'set' : 'null', 'mounted:', elementMountedRef.current, 'ref:', paymentElementRef.current ? 'attached' : 'null');
 
@@ -134,7 +134,6 @@ export default function StripeCheckout({
       return;
     }
 
-    // Mark as mounting to prevent re-entry
     elementMountedRef.current = true;
 
     let cancelled = false;
@@ -149,7 +148,6 @@ export default function StripeCheckout({
           throw new Error('Container DOM element not found');
         }
 
-        // Attendre un tick pour que le DOM soit prêt
         await new Promise(resolve => setTimeout(resolve, 50));
 
         const elementsInstance = stripe.elements({
@@ -163,7 +161,6 @@ export default function StripeCheckout({
         paymentElement.mount(container);
         console.log('[StripeCheckout] Payment element mounted successfully');
 
-        // Timeout de secours au cas où 'ready' ne serait pas déclenché
         readyTimeout = setTimeout(() => {
           if (!cancelled) {
             console.log('[StripeCheckout] Ready timeout - assuming element is ready');
@@ -195,7 +192,7 @@ export default function StripeCheckout({
       } catch (err: any) {
         console.error('[StripeCheckout] Mount elements error:', err);
         if (!cancelled) {
-          setError(err.message || 'Erreur lors de l\'affichage du formulaire');
+          setError(err.message || 'Error al mostrar el formulario');
           setIsLoading(false);
           elementMountedRef.current = false;
         }
@@ -214,7 +211,7 @@ export default function StripeCheckout({
     event.preventDefault();
 
     if (!stripe || !elements) {
-      onError('Stripe n\'est pas initialisé');
+      onError('Stripe no está inicializado');
       return;
     }
 
@@ -227,27 +224,23 @@ export default function StripeCheckout({
         throw new Error(submitError.message);
       }
 
-      // Extraire le PaymentIntent ID du clientSecret
       const paymentIntentId = clientSecret.split('_secret_')[0];
       console.log('[StripeCheckout] PaymentIntent ID:', paymentIntentId);
 
-      // Confirmer le paiement
       const result = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/fr/compte/dashboard/recruteur?payment=success`,
+          return_url: `${typeof window !== 'undefined' ? window.location.origin : ''}/es/compte/dashboard/recruteur?payment=success`,
         },
         redirect: 'if_required',
       });
 
-      // Si on arrive ici, c'est que le paiement n'a pas nécessité de redirection
       console.log('[StripeCheckout] Payment result:', result);
 
       if (result.error) {
         throw new Error(result.error.message);
       }
 
-      // Vérifier le statut du PaymentIntent
       const status = result.paymentIntent?.status;
       console.log('[StripeCheckout] PaymentIntent status:', status);
 
@@ -255,7 +248,6 @@ export default function StripeCheckout({
         console.warn('[StripeCheckout] Unexpected status:', status);
       }
 
-      // Appeler l'API pour créer l'abonnement en base de données
       console.log('[StripeCheckout] Calling confirm-payment API...');
       const response = await fetch('/api/recruteur/stripe/confirm-payment', {
         method: 'POST',
@@ -271,7 +263,7 @@ export default function StripeCheckout({
       console.log('[StripeCheckout] Confirm API response:', confirmResult);
 
       if (!response.ok) {
-        throw new Error(confirmResult.error || 'Erreur lors de la confirmation');
+        throw new Error(confirmResult.error || 'Error durante la confirmación');
       }
 
       console.log('[StripeCheckout] Payment confirmed successfully, subscription:', confirmResult.subscription?.id);
@@ -279,9 +271,9 @@ export default function StripeCheckout({
       onSuccess();
     } catch (err: any) {
       console.error('Payment error:', err);
-      setError(err.message || 'Erreur lors du traitement du paiement');
+      setError(err.message || 'Error de procesamiento de pago');
       setIsProcessing(false);
-      onError(err.message || 'Erreur lors du paiement');
+      onError(err.message || 'Error de pago');
     }
   };
 
@@ -293,7 +285,7 @@ export default function StripeCheckout({
           onClick={() => window.location.reload()}
           className="text-xs text-violet-400 hover:underline"
         >
-          Réessayer
+          Reintentar
         </button>
       </div>
     );
@@ -312,7 +304,7 @@ export default function StripeCheckout({
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-muted-foreground bg-background/80 z-10 rounded-xl pointer-events-none">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Initialisation du paiement...
+            Inicializando pago...
           </div>
         )}
       </div>
@@ -325,19 +317,19 @@ export default function StripeCheckout({
         {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Traitement...
+            Procesando...
           </>
         ) : (
           <>
             <CreditCard className="h-4 w-4" />
-            Payer ${amount} CAD
+            Pagar ${amount} CAD
           </>
         )}
       </button>
 
       <p className="text-xs text-center text-muted-foreground">
         <Check className="h-3 w-3 inline mr-1" />
-        Paiement sécurisé par Stripe
+        Pago seguro por Stripe
       </p>
     </form>
   );

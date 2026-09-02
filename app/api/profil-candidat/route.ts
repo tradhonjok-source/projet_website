@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
+import nodemailer from 'nodemailer';
 
 // GET - Récupérer le profil du candidat
 export async function GET(request: NextRequest) {
@@ -149,6 +150,74 @@ export async function POST(request: NextRequest) {
     });
 
     await prisma.$disconnect();
+
+    // Envoyer une notification email à l'admin
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD,
+        },
+      });
+
+      const profileUrl = process.env.NODE_ENV === 'production'
+        ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/candidats'
+        : 'http://localhost:3000/fr/compte/dashboard/admin/candidats';
+
+      await transporter.sendMail({
+        from: `"Cabinet DETIE" <${process.env.EMAIL_SERVER_USER}>`,
+        to: 'contact@cabinetdetie.com',
+        subject: `Nouveau candidat à valider - ${body.prenom || ''} ${body.nomFamille || ''}`,
+        html: `
+          <h2>Nouveau profil candidat soumis</h2>
+          <p>Un nouveau profil candidat a été soumis et nécessite une validation.</p>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Nom complet</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${body.prenom || ''} ${body.nomFamille || ''}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${body.email || ''}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Téléphone</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${body.telephone || ''}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Ville</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${body.adresseVille || ''}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Pays</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${body.adressePays || ''}</td>
+            </tr>
+          </table>
+          <p style="margin-top: 20px;">
+            <a href="${profileUrl}" style="display: inline-block; padding: 10px 20px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 5px;">
+              Valider ce candidat
+            </a>
+          </p>
+        `,
+        text: `
+Nouveau profil candidat soumis
+
+Nom complet: ${body.prenom || ''} ${body.nomFamille || ''}
+Email: ${body.email || ''}
+Téléphone: ${body.telephone || ''}
+Ville: ${body.adresseVille || ''}
+Pays: ${body.adressePays || ''}
+
+Lien de validation: ${profileUrl}
+        `,
+      });
+    } catch (emailError) {
+      console.error('Erreur envoi email notification admin:', emailError);
+      // Ne pas bloquer la sauvegarde si l'email échoue
+    }
 
     return NextResponse.json({
       success: true,

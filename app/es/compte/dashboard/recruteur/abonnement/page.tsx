@@ -7,8 +7,14 @@ import Link from 'next/link';
 import { PayPalScriptProvider, PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import {
   Check, CreditCard, LogOut, ArrowLeft, DollarSign, Calendar, FileText,
-  Sparkles, Shield, Zap
+  Sparkles, Shield, Zap, X
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const StripeCheckout = dynamic(
+  () => import('./stripe-checkout'),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground">Cargando pago...</div> }
+);
 
 interface Plan {
   id: 'mensuel' | 'trimestriel' | 'annuel';
@@ -72,6 +78,12 @@ function AbonnementContent() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'paypal' | null>(null);
+  const [showStripeCheckout, setShowStripeCheckout] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -275,18 +287,46 @@ function AbonnementContent() {
                     Elegir el modo de pago:
                   </p>
 
-                  <button
-                    onClick={() => handleStripeSubscribe(plan.id)}
-                    disabled={isProcessing && paymentMethod === 'stripe'}
-                    className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                  >
-                    <CreditCard className="h-4 w-4" />
-                    Tarjeta de crédito
-                    {isProcessing && paymentMethod === 'stripe' && (
-                      <div className="h-3 w-3 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                    )}
-                  </button>
+                  {/* Botón Stripe - Muestra el formulario si se hace clic */}
+                  {mounted && showStripeCheckout === plan.id ? (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowStripeCheckout(null)}
+                        className="absolute -top-3 -right-3 p-1 rounded-full bg-background border border-border hover:bg-destructive/10 z-10"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                      <StripeCheckout
+                        key={`stripe-${plan.id}`}
+                        planId={plan.id}
+                        planName={plan.name}
+                        amount={plan.price}
+                        onSuccess={() => {
+                          router.push('/es/compte/dashboard/recruteur?payment=success');
+                        }}
+                        onError={(error) => {
+                          alert(error);
+                          setShowStripeCheckout(null);
+                        }}
+                      />
+                    </div>
+                  ) : mounted ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowStripeCheckout(plan.id)}
+                      disabled={isProcessing}
+                      className="w-full py-2 rounded-xl border border-border hover:border-violet-500/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      Tarjeta de crédito
+                    </button>
+                  ) : (
+                    <div className="w-full py-2 rounded-xl border border-border flex items-center justify-center gap-2">
+                      <div className="animate-spin h-4 w-4 border-2 border-violet-500 border-t-transparent rounded-full" />
+                    </div>
+                  )}
 
+                  {/* Botones PayPal */}
                   <div className="relative min-h-[45px]">
                     <PayPalButtonsWrapper
                       planId={plan.id}

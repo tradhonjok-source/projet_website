@@ -43,7 +43,7 @@ const plans: Plan[] = [
   {
     id: 'trimestriel',
     name: 'Trimestriel',
-    price: 1500,
+    price: 1000,
     maxOffres: 5,
     period: '3 mois',
     features: [

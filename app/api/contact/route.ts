@@ -3,9 +3,14 @@ import nodemailer from 'nodemailer';
 
 // POST - Envoyer un email de contact
 export async function POST(request: NextRequest) {
+  let email: string = '';
+  let nom: string = '';
   try {
     const body = await request.json();
-    const { nom, email, sujet, message } = body;
+    nom = body.nom;
+    email = body.email;
+    const sujet = body.sujet;
+    const message = body.message;
 
     // Validation des champs obligatoires
     if (!nom || !email || !sujet || !message) {
@@ -94,7 +99,7 @@ ${message}
     if (process.env.NODE_ENV === 'development') {
       console.log('=== EMAIL DE CONTACT (DEV MODE) ===');
       console.log('To: contact@cabinetdetie.com');
-      console.log('From:', error);
+      console.log('From:', email);
       return NextResponse.json({ success: true, devMode: true });
     }
 
