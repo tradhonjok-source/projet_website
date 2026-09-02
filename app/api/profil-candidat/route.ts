@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
 import nodemailer from 'nodemailer';
+import { escape } from 'html-escaper';
 
 // GET - Récupérer le profil du candidat
 export async function GET(request: NextRequest) {
@@ -153,47 +154,56 @@ export async function POST(request: NextRequest) {
 
     // Envoyer une notification email à l'admin
     try {
+      const isProd = process.env.NODE_ENV === 'production';
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-        secure: false,
+        secure: isProd, // TLS requis en production
         auth: {
           user: process.env.EMAIL_SERVER_USER,
           pass: process.env.EMAIL_SERVER_PASSWORD,
         },
       });
 
-      const profileUrl = process.env.NODE_ENV === 'production'
+      const profileUrl = isProd
         ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/candidats'
         : 'http://localhost:3000/fr/compte/dashboard/admin/candidats';
+
+      // Sanitization des données pour prévenir les attaques XSS
+      const safePrenom = escape(String(body.prenom || ''));
+      const safeNom = escape(String(body.nomFamille || ''));
+      const safeEmail = escape(String(body.email || ''));
+      const safeTelephone = escape(String(body.telephone || ''));
+      const safeVille = escape(String(body.adresseVille || ''));
+      const safePays = escape(String(body.adressePays || ''));
 
       await transporter.sendMail({
         from: `"Cabinet DETIE" <${process.env.EMAIL_SERVER_USER}>`,
         to: 'contact@cabinetdetie.com',
-        subject: `Nouveau candidat à valider - ${body.prenom || ''} ${body.nomFamille || ''}`,
+        subject: `Nouveau candidat à valider - ${safePrenom} ${safeNom}`,
         html: `
           <h2>Nouveau profil candidat soumis</h2>
           <p>Un nouveau profil candidat a été soumis et nécessite une validation.</p>
           <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Nom complet</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${body.prenom || ''} ${body.nomFamille || ''}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safePrenom} ${safeNom}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${body.email || ''}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeEmail}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Téléphone</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${body.telephone || ''}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeTelephone}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Ville</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${body.adresseVille || ''}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeVille}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Pays</td>
-              <td style="padding: 8px; border: 1px solid #ddd;">${body.adressePays || ''}</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safePays}</td>
             </tr>
           </table>
           <p style="margin-top: 20px;">
@@ -225,16 +235,14 @@ Lien de validation: ${profileUrl}
       profile
     });
   } catch (error) {
+    // Logger côté serveur uniquement
     console.error('Erreur POST profil:', error);
-    console.error('Détails erreur:', error instanceof Error ? error.message : error);
     if (prisma) {
       await prisma.$disconnect().catch(() => {});
     }
+    // En production, ne pas exposer les détails de l'erreur
     return NextResponse.json(
-      {
-        error: 'Erreur serveur lors de la sauvegarde du profil',
-        details: error instanceof Error ? error.message : String(error)
-      },
+      { error: 'Une erreur est survenue. Veuillez réessayer.' },
       { status: 500 }
     );
   }

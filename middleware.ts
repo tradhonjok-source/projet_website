@@ -1,5 +1,6 @@
-import { clerkMiddleware } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { clerkClient } from '@clerk/nextjs/server';
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
@@ -26,11 +27,14 @@ export default clerkMiddleware(async (auth, req) => {
     '/api/webhooks/clerk',
   ];
 
-  // Routes admin qui nécessitent un rôle admin (géré dans les pages elles-mêmes)
+  // Routes admin qui nécessitent un rôle admin
   const adminRoutes = [
     '/fr/admin',
     '/en/admin',
     '/es/admin',
+    '/fr/compte/dashboard/admin',
+    '/en/compte/dashboard/admin',
+    '/es/compte/dashboard/admin',
   ];
 
   // Vérifier si c'est une route admin
@@ -40,7 +44,18 @@ export default clerkMiddleware(async (auth, req) => {
       signInUrl.searchParams.set('redirect_url', pathname);
       return NextResponse.redirect(signInUrl);
     }
-    // TODO: Ajouter vérification du rôle admin ici si nécessaire
+
+    // Vérification du rôle admin côté serveur
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userRole = user.publicMetadata?.role as string;
+
+    if (userRole !== 'admin') {
+      // Rediriger vers la page d'accueil avec un message d'erreur
+      const forbiddenUrl = new URL('/fr', req.url);
+      forbiddenUrl.searchParams.set('error', 'access_denied');
+      return NextResponse.redirect(forbiddenUrl);
+    }
   }
 
   // Si c'est une route publique, on ne fait rien

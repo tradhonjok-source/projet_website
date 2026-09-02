@@ -12,16 +12,12 @@ import {
 
 interface Candidat {
   id: string;
-  email: string;
   nomFamille: string | null;
   prenom: string | null;
-  telephone: string | null;
-  lieuNaissancePays: string | null;
   adresseVille: string | null;
   adressePays: string | null;
   statutImmigration: string | null;
   createdAt: string;
-  userEmail: string;
 }
 
 export default function CandidatsRecruteurPage() {
@@ -104,10 +100,8 @@ export default function CandidatsRecruteurPage() {
     return (
       candidat.nomFamille?.toLowerCase().includes(searchLower) ||
       candidat.prenom?.toLowerCase().includes(searchLower) ||
-      candidat.email.toLowerCase().includes(searchLower) ||
       candidat.adresseVille?.toLowerCase().includes(searchLower) ||
-      candidat.adressePays?.toLowerCase().includes(searchLower) ||
-      candidat.lieuNaissancePays?.toLowerCase().includes(searchLower)
+      candidat.adressePays?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -248,17 +242,9 @@ export default function CandidatsRecruteurPage() {
                           )}
                         </div>
 
-                        {/* Info contact */}
-                        <div className="space-y-1 text-sm">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="h-4 w-4" />
-                            <span>{candidat.email}</span>
-                          </div>
-                          {candidat.telephone && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <span>Téléphone: {candidat.telephone}</span>
-                            </div>
-                          )}
+                        {/* Note: contact via le système uniquement - RGPD/Loi 25 */}
+                        <div className="text-sm text-muted-foreground">
+                          <p>Profil validé par notre équipe</p>
                         </div>
                       </div>
 
@@ -298,31 +284,7 @@ export default function CandidatsRecruteurPage() {
             </div>
 
             <div className="space-y-6">
-              {/* Informations de contact */}
-              <div className="rounded-xl bg-secondary/50 p-4">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Coordonnées
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email:</span>
-                    <span>{selectedCandidat.email}</span>
-                  </div>
-                  {selectedCandidat.telephone && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Téléphone:</span>
-                      <span>{selectedCandidat.telephone}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email utilisateur:</span>
-                    <span>{selectedCandidat.userEmail}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Localisation */}
+              {/* Informations limitées pour RGPD/Loi 25 */}
               <div className="rounded-xl bg-secondary/50 p-4">
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -339,12 +301,6 @@ export default function CandidatsRecruteurPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Pays de résidence:</span>
                       <span>{selectedCandidat.adressePays}</span>
-                    </div>
-                  )}
-                  {selectedCandidat.lieuNaissancePays && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pays de naissance:</span>
-                      <span>{selectedCandidat.lieuNaissancePays}</span>
                     </div>
                   )}
                   {selectedCandidat.statutImmigration && (
@@ -367,23 +323,16 @@ export default function CandidatsRecruteurPage() {
               {/* Note */}
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
                 <p className="text-sm text-amber-200">
-                  Pour contacter ce candidat, utilisez les coordonnées ci-dessus.
+                  Pour contacter ce candidat, veuillez passer par notre système de mise en relation.
                   Ce candidat a été validé par notre équipe administrative.
                 </p>
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
-              <a
-                href={`mailto:${selectedCandidat.email}`}
-                className="flex-1 px-4 py-2 rounded-xl bg-violet-500 text-white hover:bg-violet-600 transition-colors text-center"
-              >
-                <Mail className="h-4 w-4 inline mr-2" />
-                Contacter par email
-              </a>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors"
+                className="flex-1 px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors"
               >
                 Fermer
               </button>

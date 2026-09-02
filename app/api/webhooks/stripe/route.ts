@@ -6,12 +6,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-08-26.dahlia',
 });
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!webhookSecret) {
+  throw new Error('STRIPE_WEBHOOK_SECRET non configuré dans les variables d\'environnement');
+}
 
 // POST - Gérer les webhooks Stripe
 export async function POST(request: NextRequest) {
   const body = await request.text();
-  const signature = request.headers.get('stripe-signature')!;
+  const signature = request.headers.get('stripe-signature');
+
+  if (!signature) {
+    return NextResponse.json(
+      { error: 'Signature Stripe manquante' },
+      { status: 400 }
+    );
+  }
 
   let event: Stripe.Event;
 

@@ -5,23 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeft, LogOut, Search, MapPin, Mail,
+  ArrowLeft, LogOut, Search, MapPin,
   Briefcase, Eye,
   CheckCircle, AlertCircle, X
 } from 'lucide-react';
 
 interface Candidat {
   id: string;
-  email: string;
   nomFamille: string | null;
   prenom: string | null;
-  telephone: string | null;
-  lieuNaissancePays: string | null;
   adresseVille: string | null;
   adressePays: string | null;
   statutImmigration: string | null;
   createdAt: string;
-  userEmail: string;
 }
 
 export default function CandidatsRecruteurPage() {
@@ -103,10 +99,8 @@ export default function CandidatsRecruteurPage() {
     return (
       candidat.nomFamille?.toLowerCase().includes(searchLower) ||
       candidat.prenom?.toLowerCase().includes(searchLower) ||
-      candidat.email.toLowerCase().includes(searchLower) ||
       candidat.adresseVille?.toLowerCase().includes(searchLower) ||
-      candidat.adressePays?.toLowerCase().includes(searchLower) ||
-      candidat.lieuNaissancePays?.toLowerCase().includes(searchLower)
+      candidat.adressePays?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -183,7 +177,7 @@ export default function CandidatsRecruteurPage() {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Buscar por nombre, email, ciudad, país..."
+                  placeholder="Buscar por nombre, ciudad, país..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-background/50 focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -241,16 +235,8 @@ export default function CandidatsRecruteurPage() {
                           )}
                         </div>
 
-                        <div className="space-y-1 text-sm">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Mail className="h-4 w-4" />
-                            <span>{candidat.email}</span>
-                          </div>
-                          {candidat.telephone && (
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <span>Teléfono: {candidat.telephone}</span>
-                            </div>
-                          )}
+                        <div className="text-sm text-muted-foreground">
+                          <p>Perfil validado por nuestro equipo</p>
                         </div>
                       </div>
 
@@ -291,29 +277,6 @@ export default function CandidatsRecruteurPage() {
             <div className="space-y-6">
               <div className="rounded-xl bg-secondary/50 p-4">
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Información de contacto
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email:</span>
-                    <span>{selectedCandidat.email}</span>
-                  </div>
-                  {selectedCandidat.telephone && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Teléfono:</span>
-                      <span>{selectedCandidat.telephone}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Email de usuario:</span>
-                    <span>{selectedCandidat.userEmail}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-secondary/50 p-4">
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Ubicación
                 </h4>
@@ -328,12 +291,6 @@ export default function CandidatsRecruteurPage() {
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">País de residencia:</span>
                       <span>{selectedCandidat.adressePays}</span>
-                    </div>
-                  )}
-                  {selectedCandidat.lieuNaissancePays && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">País de nacimiento:</span>
-                      <span>{selectedCandidat.lieuNaissancePays}</span>
                     </div>
                   )}
                   {selectedCandidat.statutImmigration && (
@@ -354,23 +311,16 @@ export default function CandidatsRecruteurPage() {
 
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4">
                 <p className="text-sm text-amber-200">
-                  Para contactar a este candidato, use la información de contacto anterior.
+                  Para contactar a este candidato, utilice nuestro sistema de conexión.
                   Este candidato ha sido validado por nuestro equipo administrativo.
                 </p>
               </div>
             </div>
 
             <div className="flex gap-3 mt-6">
-              <a
-                href={`mailto:${selectedCandidat.email}`}
-                className="flex-1 px-4 py-2 rounded-xl bg-violet-500 text-white hover:bg-violet-600 transition-colors text-center"
-              >
-                <Mail className="h-4 w-4 inline mr-2" />
-                Contactar por email
-              </a>
               <button
                 onClick={() => setShowDetailsModal(false)}
-                className="px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors"
+                className="flex-1 px-4 py-2 rounded-xl border border-border bg-secondary/50 hover:bg-secondary transition-colors"
               >
                 Cerrar
               </button>

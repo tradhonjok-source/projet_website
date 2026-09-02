@@ -40,15 +40,6 @@ export async function GET(request: NextRequest) {
       where: {
         isValidated: true,
       },
-      include: {
-        user: {
-          select: {
-            email: true,
-            role: true,
-            createdAt: true,
-          },
-        },
-      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -56,20 +47,18 @@ export async function GET(request: NextRequest) {
 
     await prisma.$disconnect();
 
-    // Formater les données pour l'affichage (sans données sensibles)
+    // Formater les données pour l'affichage - données minimales pour respecter RGPD/Loi 25
+    // Seules les informations strictement nécessaires sont exposées
     const formattedCandidates = candidates.map(candidate => ({
       id: candidate.id,
-      email: candidate.email,
       nomFamille: candidate.nomFamille,
       prenom: candidate.prenom,
-      telephone: candidate.telephone,
-      lieuNaissancePays: candidate.lieuNaissancePays,
+      // Ville et pays de résidence uniquement - pas de téléphone ni email direct
       adresseVille: candidate.adresseVille,
       adressePays: candidate.adressePays,
       statutImmigration: candidate.statutImmigration,
       createdAt: candidate.createdAt,
-      // On ne montre pas les infos de validation aux recruteurs
-      userEmail: candidate.user.email,
+      // Email du candidat masqué - contact via le système uniquement
     }));
 
     return NextResponse.json({ candidates: formattedCandidates });
