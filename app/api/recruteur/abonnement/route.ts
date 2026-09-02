@@ -38,6 +38,30 @@ export async function POST(request: NextRequest) {
     const user = await client.users.getUser(userId);
     const email = user.emailAddresses[0]?.emailAddress || '';
 
+    // Vérifier que le recruteur est validé
+    const dbUser = await prisma.user.findUnique({
+      where: { clerkId: userId },
+      select: { isValidated: true, rejectedAt: true, role: true },
+    });
+
+    if (!dbUser || dbUser.role !== 'recruteur') {
+      return NextResponse.json(
+        { error: 'Rôle recruteur requis' },
+        { status: 403 }
+      );
+    }
+
+    if (!dbUser.isValidated) {
+      return NextResponse.json(
+        {
+          error: dbUser.rejectedAt
+            ? 'Votre compte recruteur a été rejeté par notre équipe.'
+            : 'Votre compte recruteur est en attente de validation par notre équipe. Vous pourrez souscrire à un abonnement une fois validé.'
+        },
+        { status: 403 }
+      );
+    }
+
     // S'assurer que l'utilisateur existe dans la table User
     await prisma.user.upsert({
       where: { clerkId: userId },
@@ -45,6 +69,7 @@ export async function POST(request: NextRequest) {
         clerkId: userId,
         email,
         role: 'recruteur',
+        isValidated: true,
       },
       update: {},
     });

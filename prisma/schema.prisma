@@ -57,6 +57,13 @@ model User {
   role                   String                  @default("candidat")
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
+  // Champs de validation pour les recruteurs
+  isValidated            Boolean                 @default(false)
+  validatedAt            DateTime?
+  validatedBy            String?
+  rejectedAt             DateTime?
+  rejectedBy             String?
+  rejectionReason        String?
   candidateProfile       CandidateProfile?
   jobPostings            JobPosting[]
   recruiterQuestionnaire RecruiterQuestionnaire?

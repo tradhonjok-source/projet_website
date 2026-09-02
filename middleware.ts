@@ -37,6 +37,14 @@ export default clerkMiddleware(async (auth, req) => {
     '/es/compte/dashboard/admin',
   ];
 
+  // Routes recruteur qui nécessitent un compte validé
+  const recruiterRoutes = [
+    '/fr/compte/dashboard/recruteur',
+    '/en/compte/dashboard/recruteur',
+    '/es/compte/dashboard/recruteur',
+    '/api/recruteur',
+  ];
+
   // Vérifier si c'est une route admin
   if (adminRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
     if (!userId) {
@@ -51,10 +59,41 @@ export default clerkMiddleware(async (auth, req) => {
     const userRole = user.publicMetadata?.role as string;
 
     if (userRole !== 'admin') {
-      // Rediriger vers la page d'accueil avec un message d'erreur
       const forbiddenUrl = new URL('/fr', req.url);
       forbiddenUrl.searchParams.set('error', 'access_denied');
       return NextResponse.redirect(forbiddenUrl);
+    }
+  }
+
+  // Vérifier si c'est une route recruteur - bloquer si non validé
+  if (recruiterRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+    if (!userId) {
+      const signInUrl = new URL('/fr/compte/connexion', req.url);
+      signInUrl.searchParams.set('redirect_url', pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    const userRole = user.publicMetadata?.role as string;
+
+    if (userRole === 'recruteur') {
+      // Vérifier la validation dans la base de données
+      const prisma = await import('@/lib/prisma').then(m => m.createPrismaClient());
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { clerkId: userId },
+          select: { isValidated: true, rejectedAt: true },
+        });
+
+        if (!dbUser?.isValidated) {
+          // Rediriger vers page d'attente de validation
+          const pendingUrl = new URL('/fr/compte/recruteur-en-attente', req.url);
+          return NextResponse.redirect(pendingUrl);
+        }
+      } finally {
+        await prisma.$disconnect();
+      }
     }
   }
 

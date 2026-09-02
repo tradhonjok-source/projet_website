@@ -45,9 +45,17 @@ export async function POST(req: Request) {
     // Les utilisateurs avec email @cabinetdetie.com sont admins
     const email = email_addresses[0]?.email_address || '';
     let defaultRole = 'candidat';
+    let isValidated = false;
 
     if (email.includes('@cabinetdetie.com')) {
       defaultRole = 'admin';
+      isValidated = true; // Admins sont auto-validés
+    }
+
+    // Les recruteurs doivent être validés par un admin
+    if (public_metadata?.role === 'recruteur') {
+      defaultRole = 'recruteur';
+      isValidated = false; // En attente de validation
     }
 
     // Mettre à jour l'utilisateur avec le rôle par défaut
@@ -61,6 +69,7 @@ export async function POST(req: Request) {
           clerkId: id,
           email: email,
           role: defaultRole,
+          isValidated,
         },
         update: {
           email: email,
