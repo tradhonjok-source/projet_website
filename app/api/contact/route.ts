@@ -5,12 +5,37 @@ import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
 // Rate limiting: 5 requêtes par minute par IP
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, '1 m'),
-  analytics: true,
-  prefix: '@upstash/ratelimit:contact',
-});
+// Utilise Redis Upstash en prod, fallback en mémoire si non configuré
+const ratelimit = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, '1 m'),
+      analytics: true,
+      prefix: '@upstash/ratelimit:contact',
+    })
+  : null;
+
+// Fallback rate limiting en mémoire (si Upstash non configuré)
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+
+function checkRateLimitLocal(ip: string): { success: boolean; remaining: number; resetTime: number } {
+  const now = Date.now();
+  const windowMs = 60000;
+  const maxRequests = 5;
+  const record = requestCounts.get(ip);
+
+  if (!record || now > record.resetTime) {
+    requestCounts.set(ip, { count: 1, resetTime: now + windowMs });
+    return { success: true, remaining: maxRequests - 1, resetTime: now + windowMs };
+  }
+
+  if (record.count >= maxRequests) {
+    return { success: false, remaining: 0, resetTime: record.resetTime };
+  }
+
+  record.count++;
+  return { success: true, remaining: maxRequests - record.count, resetTime: record.resetTime };
+}
 
 // POST - Envoyer un email de contact
 export async function POST(request: NextRequest) {
@@ -18,22 +43,29 @@ export async function POST(request: NextRequest) {
   let nom: string = '';
   try {
     // Vérifier le rate limiting
-    const ip = request.ip ?? 'unknown';
-    const { success, limit, reset, remaining } = await ratelimit.limit(ip);
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown';
+
+    let rateLimitResult;
+    if (ratelimit) {
+      rateLimitResult = await ratelimit.limit(ip);
+    } else {
+      rateLimitResult = checkRateLimitLocal(ip);
+    }
+
+    const { success, remaining, reset } = rateLimitResult;
 
     if (!success) {
       return NextResponse.json(
         {
           error: 'Trop de requêtes. Veuillez attendre quelques minutes.',
-          remaining: remaining,
-          reset: new Date(reset).toISOString()
+          remaining,
         },
         {
           status: 429,
           headers: {
-            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Limit': '5',
             'X-RateLimit-Remaining': remaining.toString(),
-            'X-RateLimit-Reset': new Date(reset).toISOString(),
+            'X-RateLimit-Reset': reset ? new Date(reset).toISOString() : new Date(Date.now() + 60000).toISOString(),
           }
         }
       );
