@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://js.stripe.com https://www.paypal.com https://www.sandbox.paypal.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.clerk.com https://api.stripe.com https://api.paypal.com https://maps.googleapis.com;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://js.stripe.com https://www.paypal.com https://www.sandbox.paypal.com https://clerk.cabinetdetie.com https://cdn.clerk.com; style-src 'self' 'unsafe-inline' https://clerk.cabinetdetie.com https://cdn.clerk.com; img-src 'self' data: https:; font-src 'self' data: https://clerk.cabinetdetie.com https://cdn.clerk.com; connect-src 'self' https://api.clerk.com https://clerk.cabinetdetie.com https://api.stripe.com https://api.paypal.com https://maps.googleapis.com;",
           },
           {
             key: 'Permissions-Policy',
