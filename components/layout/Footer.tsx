@@ -28,7 +28,7 @@ export default function Footer({ locale }: FooterProps) {
           <div className="space-y-4">
             <h3 className="text-base sm:text-lg font-bold"><span className="gradient-text">CABINET D'EXPERTISE</span> <span className="text-white">DETIE</span></h3>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {isFr ? 'Permis CNESST : AR-2000074' : 'CNESST License: AR-2000074'}
+              {isFr ? 'Permis CNESST : AR-2604957' : 'CNESST License: AR-2604957'}
             </p>
           </div>
 
