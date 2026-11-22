@@ -171,9 +171,9 @@ function AbonnementContent() {
     }
   };
 
-  const handlePayPalOnError = (error: Error) => {
+  const handlePayPalOnError = (error: Record<string, unknown>) => {
     console.error('PayPal error:', error);
-    alert('Erreur PayPal: ' + error.message);
+    alert('Erreur PayPal: ' + String(error.message ?? error));
   };
 
   if (!isLoaded || !isSignedIn) {
@@ -444,7 +444,7 @@ function PayPalButtonsWrapper({
   paymentMethod: 'stripe' | 'paypal' | null;
   onCreateOrder: () => Promise<string>;
   onApprove: (data: { orderID: string }) => Promise<void>;
-  onError: (error: Error) => void;
+  onError: (error: Record<string, unknown>) => void;
   onCancel: () => void;
 }) {
   const [{ isPending }] = usePayPalScriptReducer();

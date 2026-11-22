@@ -1,0 +1,4 @@
+Awaiting authentication in web browser (up to 10 minutes).
+Auth Url: https://oauth2.neon.tech/oauth2/auth?scope=openid+offline+offline_access+urn%3Aneoncloud%3Aprojects%3Acreate+urn%3Aneoncloud%3Aprojects%3Aread+urn%3Aneoncloud%3Aprojects%3Aupdate+urn%3Aneoncloud%3Aprojects%3Adelete+urn%3Aneoncloud%3Aorgs%3Acreate+urn%3Aneoncloud%3Aorgs%3Aread+urn%3Aneoncloud%3Aorgs%3Aupdate+urn%3Aneoncloud%3Aorgs%3Adelete+urn%3Aneoncloud%3Aorgs%3Apermission&state=bGwG4rfW6B3hJN6NuJ5wMuZN8wvhlD0uajJhPFvhMKI&code_challenge=2X2x3SqFa30iJq0OFPOik0zMx8UEaMKeenXQ1rbY6Xg&code_challenge_method=S256&redirect_uri=http%3A%2F%2F127.0.0.1%3A50779%2Fcallback&client_id=neonctl&response_type=code
+Sign-in finishes only in a browser on this machine. If that isn't possible, stop this command and run `neon me` for other ways to authenticate.
+ERROR: Authentication timed out after 10 minutes
