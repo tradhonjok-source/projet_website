@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
-import { escape } from 'html-escaper';
+import { sendMail, adminInbox, esc } from '@/lib/mailer';
 
 // GET - Récupérer le profil du candidat
 export async function GET(request: NextRequest) {
@@ -152,40 +151,30 @@ export async function POST(request: NextRequest) {
 
     await prisma.$disconnect();
 
-    // Envoyer une notification email à l'admin
+    // Envoyer la notification à l'admin (boîte du cabinet) + confirmation au candidat.
+    // Un échec d'e-mail ne doit JAMAIS bloquer la sauvegarde du profil.
+    const isProd = process.env.NODE_ENV === 'production';
+    const profileUrl = isProd
+      ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/candidats'
+      : 'http://localhost:3000/fr/compte/dashboard/admin/candidats';
+
+    // Sanitization des données pour prévenir les attaques XSS
+    const safePrenom = esc(body.prenom);
+    const safeNom = esc(body.nomFamille);
+    const safeEmail = esc(email || body.email);
+    const safeTelephone = esc(body.telephone);
+    const safeVille = esc(body.adresseVille);
+    const safePays = esc(body.adressePays);
+
     try {
-      const isProd = process.env.NODE_ENV === 'production';
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-        secure: isProd, // TLS requis en production
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      });
-
-      const profileUrl = isProd
-        ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/candidats'
-        : 'http://localhost:3000/fr/compte/dashboard/admin/candidats';
-
-      // Sanitization des données pour prévenir les attaques XSS
-      const safePrenom = escape(String(body.prenom || ''));
-      const safeNom = escape(String(body.nomFamille || ''));
-      const safeEmail = escape(String(body.email || ''));
-      const safeTelephone = escape(String(body.telephone || ''));
-      const safeVille = escape(String(body.adresseVille || ''));
-      const safePays = escape(String(body.adressePays || ''));
-
-      await transporter.sendMail({
-        from: `"Cabinet DETIE" <${process.env.EMAIL_SERVER_USER}>`,
-        to: 'contact@cabinetdetie.com',
+      await sendMail({
+        to: adminInbox(),
         subject: `Nouveau candidat à valider - ${safePrenom} ${safeNom}`,
         html: `
-          <h2>Nouveau profil candidat soumis</h2>
+          <h2 style="color: #059669;">Nouveau profil candidat soumis</h2>
           <p>Un nouveau profil candidat a été soumis et nécessite une validation.</p>
-          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
-            <tr>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px; font-family: sans-serif;">
+            <tr style="background-color: #f3f4f6;">
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Nom complet</td>
               <td style="padding: 8px; border: 1px solid #ddd;">${safePrenom} ${safeNom}</td>
             </tr>
@@ -193,7 +182,7 @@ export async function POST(request: NextRequest) {
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email</td>
               <td style="padding: 8px; border: 1px solid #ddd;">${safeEmail}</td>
             </tr>
-            <tr>
+            <tr style="background-color: #f3f4f6;">
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Téléphone</td>
               <td style="padding: 8px; border: 1px solid #ddd;">${safeTelephone}</td>
             </tr>
@@ -201,32 +190,70 @@ export async function POST(request: NextRequest) {
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Ville</td>
               <td style="padding: 8px; border: 1px solid #ddd;">${safeVille}</td>
             </tr>
-            <tr>
+            <tr style="background-color: #f3f4f6;">
               <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Pays</td>
               <td style="padding: 8px; border: 1px solid #ddd;">${safePays}</td>
             </tr>
           </table>
-          <p style="margin-top: 20px;">
-            <a href="${profileUrl}" style="display: inline-block; padding: 10px 20px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 5px;">
-              Valider ce candidat
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="${profileUrl}" style="display: inline-block; padding: 14px 24px; background-color: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              Voir les documents du candidat
             </a>
+          </div>
+          <p style="margin-top: 20px; font-size: 12px; color: #666; font-family: sans-serif;">
+            Ceci est une notification automatique envoyée depuis le portail candidat du Cabinet DETIE.
           </p>
         `,
         text: `
 Nouveau profil candidat soumis
 
 Nom complet: ${body.prenom || ''} ${body.nomFamille || ''}
-Email: ${body.email || ''}
+Email: ${email || body.email || ''}
 Téléphone: ${body.telephone || ''}
 Ville: ${body.adresseVille || ''}
 Pays: ${body.adressePays || ''}
 
-Lien de validation: ${profileUrl}
+Lien pour voir les documents et valider: ${profileUrl}
         `,
       });
     } catch (emailError) {
-      console.error('Erreur envoi email notification admin:', emailError);
-      // Ne pas bloquer la sauvegarde si l'email échoue
+      console.error('❌ ERREUR ENVOI EMAIL ADMIN (profil candidat) :', {
+        message: emailError instanceof Error ? emailError.message : String(emailError),
+        timestamp: new Date().toISOString(),
+        userEmail: email || body.email,
+      });
+    }
+
+    // Confirmation au candidat lui-même
+    const candidateEmail = email || body.email;
+    if (candidateEmail) {
+      try {
+        await sendMail({
+          to: candidateEmail,
+          subject: 'Confirmation — votre profil candidat a bien été reçu (Cabinet DETIE)',
+          html: `
+            <h2 style="color: #059669;">Profil bien reçu ✅</h2>
+            <p>Bonjour ${safePrenom} ${safeNom},</p>
+            <p>Nous confirmons la réception de votre profil candidat sur le portail du <strong>Cabinet DETIE</strong>.</p>
+            <p>Notre équipe procédera à la <strong>validation de votre dossier</strong> et vous contactera si des documents complémentaires sont nécessaires.</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #666;">
+              Ceci est un message automatique — merci de ne pas y répondre directement.
+            </p>
+          `,
+          text: `Bonjour ${body.prenom || ''} ${body.nomFamille || ''},
+
+Nous confirmons la réception de votre profil candidat (Cabinet DETIE).
+Notre équipe procédera à la validation de votre dossier et vous contactera si besoin.
+
+Message automatique — merci de ne pas y répondre.`,
+        });
+      } catch (emailError) {
+        console.error('❌ ERREUR ENVOI CONFIRMATION CANDIDAT :', {
+          message: emailError instanceof Error ? emailError.message : String(emailError),
+          timestamp: new Date().toISOString(),
+          candidateEmail,
+        });
+      }
     }
 
     return NextResponse.json({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
+import { sendMail, adminInbox, esc } from '@/lib/mailer';
 
 // POST - Sauvegarder le questionnaire recruteur
 export async function POST(request: NextRequest) {
@@ -123,6 +124,88 @@ export async function POST(request: NextRequest) {
     });
 
     await prisma.$disconnect();
+
+    // E-mails de confirmation aux deux parties (un échec ne bloque pas la soumission).
+    const isProd = process.env.NODE_ENV === 'production';
+    const adminUrl = isProd
+      ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/recruteurs'
+      : 'http://localhost:3000/fr/compte/dashboard/admin/recruteurs';
+    const safeEntreprise = esc(questionnaire.entrepriseNom);
+    const safeSecteur = esc(questionnaire.recrutementSecteur);
+    const safeEmail = esc(questionnaire.entrepriseEmail);
+    const recruteurEmail = user.email || questionnaire.entrepriseEmail || '';
+
+    try {
+      await sendMail({
+        to: adminInbox(),
+        subject: `Nouveau questionnaire recruteur soumis - ${safeEntreprise}`,
+        html: `
+          <h2 style="color: #7c3aed;">Nouveau questionnaire recruteur soumis</h2>
+          <p>Un recruteur vient de soumettre son questionnaire et attend validation.</p>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px; font-family: sans-serif;">
+            <tr style="background-color: #f3f4f6;">
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Entreprise</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeEntreprise}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Secteur</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeSecteur}</td>
+            </tr>
+            <tr style="background-color: #f3f4f6;">
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Email entreprise</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${safeEmail}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Postes ouverts</td>
+              <td style="padding: 8px; border: 1px solid #ddd;">${questionnaire.recrutementPostesOuverts}</td>
+            </tr>
+          </table>
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="${adminUrl}" style="display: inline-block; padding: 14px 24px; background-color: #7c3aed; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-family: sans-serif;">
+              Valider le recruteur
+            </a>
+          </div>
+        `,
+        text: `
+Nouveau questionnaire recruteur soumis
+
+Entreprise: ${questionnaire.entrepriseNom || ''}
+Secteur: ${questionnaire.recrutementSecteur || ''}
+Email: ${questionnaire.entrepriseEmail || ''}
+Postes ouverts: ${questionnaire.recrutementPostesOuverts}
+
+Valider: ${adminUrl}
+        `,
+      });
+    } catch (e) {
+      console.error('❌ ERREUR ENVOI EMAIL ADMIN (questionnaire recruteur):', e);
+    }
+
+    if (recruteurEmail) {
+      try {
+        await sendMail({
+          to: recruteurEmail,
+          subject: 'Confirmation — votre questionnaire a bien été reçu (Cabinet DETIE)',
+          html: `
+            <h2 style="color: #7c3aed;">Questionnaire bien reçu ✅</h2>
+            <p>Bonjour,</p>
+            <p>Nous confirmons la réception de votre questionnaire pour <strong>${safeEntreprise}</strong>.</p>
+            <p>Notre équipe validera votre compte recruteur dans les plus brefs délais ; vous recevrez un courriel dès la validation.</p>
+            <p style="margin-top: 20px; font-size: 12px; color: #666;">
+              Ceci est un message automatique — merci de ne pas y répondre directement.
+            </p>
+          `,
+          text: `Bonjour,
+
+Nous confirmons la réception de votre questionnaire (${questionnaire.entrepriseNom || 'votre entreprise'}).
+Votre compte recruteur sera validé sous peu.
+
+Message automatique — Cabinet DETIE.`,
+        });
+      } catch (e) {
+        console.error('❌ ERREUR ENVOI CONFIRMATION RECRUTEUR:', e);
+      }
+    }
 
     return NextResponse.json({
       success: true,
