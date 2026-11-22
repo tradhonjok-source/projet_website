@@ -41,6 +41,66 @@ export async function POST(request: NextRequest) {
 
   // Gérer les événements de paiement
   switch (event.type) {
+    case 'checkout.session.completed': {
+      // Paiement via Checkout Sessions (page hébergée Stripe) — nouvelle intégration recommandée.
+      const session = event.data.object as Stripe.Checkout.Session;
+
+      try {
+        const { planId, userId } = session.metadata || {};
+
+        if (!planId || !userId) {
+          console.error('checkout.session.completed: métadonnées manquantes', session.metadata);
+          break;
+        }
+
+        const planDetails = getPlanDetails(planId);
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + planDetails.durationDays);
+
+        await prisma.recruiterSubscription.upsert({
+          where: { clerkUserId: userId },
+          update: {
+            plan: planDetails.plan as 'mensuel' | 'trimestriel' | 'annuel',
+            price: planDetails.price,
+            maxOffres: planDetails.maxOffres,
+            endDate,
+            isActive: true,
+            paymentMethod: 'stripe',
+            paymentStatus: 'completed',
+            paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+            updatedAt: new Date(),
+          },
+          create: {
+            clerkUserId: userId,
+            plan: planDetails.plan as 'mensuel' | 'trimestriel' | 'annuel',
+            price: planDetails.price,
+            maxOffres: planDetails.maxOffres,
+            startDate: new Date(),
+            endDate,
+            isActive: true,
+            paymentMethod: 'stripe',
+            paymentStatus: 'completed',
+            paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+          },
+        });
+
+        await prisma.user.upsert({
+          where: { clerkId: userId },
+          update: { role: 'recruteur' },
+          create: {
+            clerkId: userId,
+            email: session.customer_details?.email || '',
+            role: 'recruteur',
+          },
+        });
+
+        console.log(`Checkout Session complétée pour ${userId} (plan ${planId})`);
+      } catch (error) {
+        console.error('Erreur traitement checkout.session.completed:', error);
+      }
+      break;
+    }
+
     case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
@@ -165,12 +225,12 @@ export async function POST(request: NextRequest) {
 function getPlanDetails(planId: string) {
   switch (planId) {
     case 'mensuel':
-      return { plan: 'mensuel', price: 500, maxOffres: 1, months: 1 };
+      return { plan: 'mensuel', price: 500, maxOffres: 1, months: 1, durationDays: 30 };
     case 'trimestriel':
-      return { plan: 'trimestriel', price: 1500, maxOffres: 5, months: 3 };
+      return { plan: 'trimestriel', price: 1000, maxOffres: 5, months: 3, durationDays: 90 };
     case 'annuel':
-      return { plan: 'annuel', price: 1500, maxOffres: 12, months: 12 };
+      return { plan: 'annuel', price: 1500, maxOffres: 12, months: 12, durationDays: 365 };
     default:
-      return { plan: 'mensuel', price: 500, maxOffres: 1, months: 1 };
+      return { plan: 'mensuel', price: 500, maxOffres: 1, months: 1, durationDays: 30 };
   }
 }
