@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, Briefcase, CheckCircle2, ArrowRight, Award, Star, Globe, Clock, Target, Heart, Lightbulb, Shield, FileText, Handshake, TrendingUp, Zap, Building2, User, Mail, Phone, MapPin } from 'lucide-react';
+import { Users, Briefcase, Car, CheckCircle2, ArrowRight, Award, Star, Globe, Clock, Target, Heart, Lightbulb, Shield, FileText, Handshake, TrendingUp, Zap, Building2, User, Mail, Phone, MapPin } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { motion } from 'framer-motion';
@@ -91,6 +91,15 @@ export default function HomePage() {
                   Administrador Autorizado
                   <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
                 </Link>
+
+                <a
+                  href="https://taxi.cabinetdetie.com/"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-yellow-500 to-amber-500 px-8 py-4 text-base font-medium text-black transition-all hover:scale-105 hover:shadow-2xl hover:shadow-yellow-500/50 w-full sm:w-auto justify-center"
+                >
+                  <Car className="h-5 w-5" />
+                  Transporte VTC / Taxi
+                  <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
+                </a>
               </motion.div>
 
               <motion.div
