@@ -207,9 +207,10 @@ export default function ProfilCandidatPage() {
     if (user?.emailAddresses?.[0]?.emailAddress) {
       setPersonalInfo(prev => ({
         ...prev,
-        email: user.emailAddresses[0].emailAddress,
-        prenom: user.firstName || '',
-        nomFamille: user.lastName || '',
+        // Only fill empty fields — never overwrite what the user is typing
+        email: prev.email || user.emailAddresses[0].emailAddress,
+        prenom: prev.prenom || user.firstName || '',
+        nomFamille: prev.nomFamille || user.lastName || '',
       }));
     }
   }, [user]);
@@ -234,8 +235,8 @@ export default function ProfilCandidatPage() {
           // Section 1
           if (profile.nomFamille) setPersonalInfo(prev => ({
             ...prev,
-            nomFamille: profile.nomFamille,
-            prenom: profile.prenom || '',
+            nomFamille: prev.nomFamille || profile.nomFamille,
+            prenom: prev.prenom || profile.prenom || '',
             dateNaissance: profile.dateNaissance?.split('T')[0] || '',
             numeroPasseport: profile.numeroPasseport || '',
             passeportDateDebut: profile.passeportDateDebut?.split('T')[0] || '',

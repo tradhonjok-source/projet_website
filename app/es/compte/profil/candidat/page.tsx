@@ -157,9 +157,10 @@ export default function ProfilCandidatPage() {
     if (user?.emailAddresses?.[0]?.emailAddress) {
       setPersonalInfo(prev => ({
         ...prev,
-        email: user.emailAddresses[0].emailAddress,
-        prenom: user.firstName || '',
-        nomFamille: user.lastName || '',
+        // Only fill empty fields — never overwrite what the user is typing
+        email: prev.email || user.emailAddresses[0].emailAddress,
+        prenom: prev.prenom || user.firstName || '',
+        nomFamille: prev.nomFamille || user.lastName || '',
       }));
     }
   }, [user]);
