@@ -207,9 +207,11 @@ export default function ProfilCandidatPage() {
     if (user?.emailAddresses?.[0]?.emailAddress) {
       setPersonalInfo(prev => ({
         ...prev,
-        email: user.emailAddresses[0].emailAddress,
-        prenom: user.firstName || '',
-        nomFamille: user.lastName || '',
+        // Ne remplissage depuis Clerk QUE si le champ est vide : sinon on écrasait
+        // la saisie de l'utilisateur à chaque re-rendu de l'objet user Clerk.
+        email: prev.email || user.emailAddresses[0].emailAddress,
+        prenom: prev.prenom || user.firstName || '',
+        nomFamille: prev.nomFamille || user.lastName || '',
       }));
     }
   }, [user]);
@@ -232,11 +234,11 @@ export default function ProfilCandidatPage() {
         if (response.ok) {
           const profile = await response.json();
 
-          // Section 1
+          // Section 1 — ne remplit que les champs vides (ne jamais écraser la saisie en cours)
           if (profile.nomFamille) setPersonalInfo(prev => ({
             ...prev,
-            nomFamille: profile.nomFamille,
-            prenom: profile.prenom || '',
+            nomFamille: prev.nomFamille || profile.nomFamille,
+            prenom: prev.prenom || profile.prenom || '',
             dateNaissance: profile.dateNaissance?.split('T')[0] || '',
             numeroPasseport: profile.numeroPasseport || '',
             passeportDateDebut: profile.passeportDateDebut?.split('T')[0] || '',
@@ -263,14 +265,14 @@ export default function ProfilCandidatPage() {
           // Section 3
           if (profile.experiences) setExperiences(profile.experiences);
 
-          // Section 4
-          if (profile.declarationVille) setDeclaration(prev => ({
+          // Section 4 — champs vides uniquement, pour ne pas écraser la saisie en cours
+          if (profile.declarationVille || profile.declarationNomComplet) setDeclaration(prev => ({
             ...prev,
-            ville: profile.declarationVille,
-            pays: profile.declarationPays,
-            nomComplet: profile.declarationNomComplet,
-            signature: profile.declarationSignature,
-            accepteConditions: profile.declarationAcceptee,
+            ville: prev.ville || profile.declarationVille,
+            pays: prev.pays || profile.declarationPays,
+            nomComplet: prev.nomComplet || profile.declarationNomComplet,
+            signature: prev.signature || profile.declarationSignature,
+            accepteConditions: prev.accepteConditions || profile.declarationAcceptee,
           }));
 
           // Section 5
