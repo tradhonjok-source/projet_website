@@ -14,11 +14,15 @@ import { escape } from 'html-escaper';
  */
 
 export function getTransporter() {
-  const isProd = process.env.NODE_ENV === 'production';
+  const port = parseInt(process.env.EMAIL_SERVER_PORT || '587');
+  // Port 465 = SMTPS (TLS dès la connexion, secure: true). Port 587 = STARTTLS (secure: false).
+  // "wrong version number" = on tente du TLS immédiat sur un port en clair (ou l'inverse).
+  const secure = port === 465;
   return nodemailer.createTransport({
-    host: process.env.EMAIL_SERVER_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
-    secure: isProd, // TLS requis en production
+    host: process.env.EMAIL_SERVER_HOST || 'smtp.hostinger.com',
+    port,
+    secure,
+    requireTLS: !secure, // force le STARTTLS sur 587
     auth: {
       user: process.env.EMAIL_SERVER_USER,
       pass: process.env.EMAIL_SERVER_PASSWORD,
