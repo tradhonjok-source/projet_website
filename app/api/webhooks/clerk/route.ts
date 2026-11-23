@@ -2,8 +2,7 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import { createPrismaClient } from '@/lib/prisma';
-import nodemailer from 'nodemailer';
-import { escape } from 'html-escaper';
+import { sendMail, adminInbox, esc } from '@/lib/mailer';
 
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET!;
 
@@ -79,36 +78,27 @@ export async function POST(req: Request) {
 
       await prisma.$disconnect();
 
-      // Envoyer une notification email si c'est un candidat
-      if (defaultRole === 'candidat') {
+      // Envoyer les notifications email (candidat ET recruteur) : au cabinet + bienvenue à l'inscrit
+      if (defaultRole === 'candidat' || defaultRole === 'recruteur') {
+        const isProd = process.env.NODE_ENV === 'production';
+        const origin = isProd ? 'https://www.cabinetdetie.com' : 'http://localhost:3000';
+        const adminCandidatsUrl = `${origin}/fr/compte/dashboard/admin/candidats`;
+        const adminRecruteursUrl = `${origin}/fr/compte/dashboard/admin/recruteurs`;
+
+        const safeFirstName = esc(first_name);
+        const safeLastName = esc(last_name);
+        const safeEmail = esc(email);
+        const fullName = `${first_name || ''} ${last_name || ''}`.trim() || email;
+        const roleLabel = defaultRole === 'recruteur' ? 'recruteur' : 'candidat';
+
+        // 1) Notification au cabinet (boîte admin)
         try {
-          const isProd = process.env.NODE_ENV === 'production';
-          const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_SERVER_HOST || 'smtp.hostinger.com',
-            port: parseInt(process.env.EMAIL_SERVER_PORT || '465'),
-            secure: process.env.EMAIL_SERVER_PORT === '465', // true pour port 465
-            auth: {
-              user: process.env.EMAIL_SERVER_USER,
-              pass: process.env.EMAIL_SERVER_PASSWORD,
-            },
-          });
-
-          const dashboardUrl = isProd
-            ? 'https://www.cabinetdetie.com/fr/compte/dashboard/admin/candidats'
-            : 'http://localhost:3000/fr/compte/dashboard/admin/candidats';
-
-          // Sanitization des données
-          const safeFirstName = escape(first_name || '');
-          const safeLastName = escape(last_name || '');
-          const safeEmail = escape(email);
-
-          await transporter.sendMail({
-            from: `"Cabinet DETIE" <${process.env.EMAIL_SERVER_USER}>`,
-            to: 'contact@cabinetdetie.com',
-            subject: `Nouveau candidat inscrit - ${safeFirstName} ${safeLastName}`,
+          await sendMail({
+            to: adminInbox(),
+            subject: `Nouvelle inscription ${roleLabel} - ${safeFirstName} ${safeLastName}`,
             html: `
-              <h2>Nouveau candidat inscrit</h2>
-              <p>Un nouveau candidat vient de s'inscrire sur la plateforme.</p>
+              <h2>Nouvelle inscription ${roleLabel}</h2>
+              <p>Un nouveau ${roleLabel} vient de s'inscrire sur la plateforme.</p>
               <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
                 <tr>
                   <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Nom complet</td>
@@ -119,29 +109,81 @@ export async function POST(req: Request) {
                   <td style="padding: 8px; border: 1px solid #ddd;">${safeEmail}</td>
                 </tr>
                 <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Rôle</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${roleLabel}${defaultRole === 'recruteur' ? ' (en attente de validation)' : ''}</td>
+                </tr>
+                <tr>
                   <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Date d'inscription</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">${new Date().toLocaleDateString('fr-FR')}</td>
                 </tr>
               </table>
               <p style="margin-top: 20px;">
-                <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 20px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 5px;">
-                  Voir les candidats inscrits
+                <a href="${defaultRole === 'recruteur' ? adminRecruteursUrl : adminCandidatsUrl}" style="display: inline-block; padding: 10px 20px; background-color: #f59e0b; color: white; text-decoration: none; border-radius: 5px;">
+                  Voir dans l'admin
                 </a>
               </p>
             `,
             text: `
-Nouveau candidat inscrit
+Nouvelle inscription ${roleLabel}
 
 Nom complet: ${first_name || ''} ${last_name || ''}
 Email: ${email}
+Rôle: ${roleLabel}
 Date d'inscription: ${new Date().toLocaleDateString('fr-FR')}
 
-Lien vers le dashboard: ${dashboardUrl}
+Admin: ${defaultRole === 'recruteur' ? adminRecruteursUrl : adminCandidatsUrl}
             `,
           });
         } catch (emailError) {
-          console.error('Erreur envoi email notification candidat:', emailError);
+          console.error('Erreur envoi email notification admin:', emailError);
           // Ne pas bloquer le webhook si l'email échoue
+        }
+
+        // 2) E-mail de bienvenue à l'inscrit lui-même
+        if (email) {
+          try {
+            const dashboardUrl = `${origin}/fr/compte/dashboard`;
+            const welcomeSubject =
+              defaultRole === 'recruteur'
+                ? 'Bienvenue au Cabinet DETIE — votre compte recruteur est en attente de validation'
+                : 'Bienvenue au Cabinet DETIE — votre espace candidat est prêt';
+            const welcomeBody =
+              defaultRole === 'recruteur'
+                ? `<p>Bonjour ${safeFirstName || 'cher partenaire'},</p>
+                   <p>Merci de votre inscription en tant que <strong>recruteur</strong> sur la plateforme du Cabinet DETIE.</p>
+                   <p>Notre équipe va <strong>valider votre compte</strong> sous peu. Dès la validation, vous pourrez publier des offres et consulter les candidats.</p>`
+                : `<p>Bonjour ${safeFirstName || 'cher candidat'},</p>
+                   <p>Bienvenue sur la plateforme du <strong>Cabinet DETIE</strong> ! Votre espace candidat est prêt.</p>
+                   <p>Vous pouvez dès maintenant compléter votre profil, déposer votre CV et postuler aux offres.</p>`;
+
+            await sendMail({
+              to: email,
+              subject: welcomeSubject,
+              html: `
+                <h2 style="color: #7c3aed;">Bienvenue au Cabinet DETIE 👋</h2>
+                ${welcomeBody}
+                <p style="margin-top: 20px;">
+                  <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 24px; background-color: #7c3aed; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    Ouvrir mon espace
+                  </a>
+                </p>
+                <p style="margin-top: 20px; font-size: 12px; color: #666;">
+                  Message automatique du Cabinet DETIE — merci de ne pas y répondre directement.
+                </p>
+              `,
+              text: `Bonjour ${first_name || ''},
+
+${defaultRole === 'recruteur'
+  ? 'Merci de votre inscription recruteur. Notre équipe validera votre compte sous peu ; vous pourrez alors publier des offres.'
+  : 'Bienvenue ! Votre espace candidat est prêt : complétez votre profil, déposez votre CV et postulez aux offres.'}
+
+Ouvrir mon espace : ${dashboardUrl}
+
+Message automatique — Cabinet DETIE.`,
+            });
+          } catch (emailError) {
+            console.error('Erreur envoi email bienvenue:', emailError);
+          }
         }
       }
     } catch (error) {
